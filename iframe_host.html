@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Player</title>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        let player;
+
+        // Initialize the YouTube Iframe API when the script is loaded
+        function onYouTubeIframeAPIReady() {
+            const videoId = new URLSearchParams(window.location.search).get('videoId');
+            player = new YT.Player('youtube-video', {
+                videoId: videoId,
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+
+        // Notify the extension that the player is ready
+        function onPlayerReady() {
+            console.log("Player is ready.");
+        }
+
+        // Listen for messages from the Chrome extension
+        chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+            if (message.type === 'getCurrentTime') {
+                const currentTime = player.getCurrentTime();
+                chrome.runtime.sendMessage({ type: 'currentTime', time: currentTime });
+            }
+        });
+    </script>
+</head>
+<body>
+    <div id="youtube-video"></div>
+</body>
+</html>
