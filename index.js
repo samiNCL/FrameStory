@@ -7,22 +7,30 @@ function onYouTubeIframeAPIReady() {
     videoId = urlParams.get('videoId');
 
     if (videoId) {
-        console.log("Video ID extracted: ", videoId);  // For debugging
+        console.log("Video ID extracted: ", videoId);  // Log the extracted video ID
         player = new YT.Player('youtube-video', {
             videoId: videoId,
             width: '100%',
             height: '450',
             events: {
-                'onReady': onPlayerReady
+                'onReady': onPlayerReady,
+                'onError': onPlayerError  // Capture any player errors
             }
         });
     } else {
+        console.error("No valid video ID provided.");
         alert("No valid video ID provided.");
     }
 }
 
+// Player is ready
 function onPlayerReady() {
     console.log("Player is ready and video is loaded.");
+}
+
+// Capture errors from the YouTube player
+function onPlayerError(event) {
+    console.error("Error in YouTube player: ", event);
 }
 
 // Add reflection and display on the timeline
@@ -67,4 +75,5 @@ function addBalloonToTimeline(time, text) {
     timelineContainer.appendChild(balloon);
 }
 
+// Initialize event listeners
 document.getElementById('add-reflection').addEventListener('click', addReflection);
