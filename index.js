@@ -7,8 +7,11 @@ function onYouTubeIframeAPIReady() {
     videoId = urlParams.get('videoId');
 
     if (videoId) {
+        console.log("Video ID extracted: ", videoId);  // For debugging
         player = new YT.Player('youtube-video', {
             videoId: videoId,
+            width: '100%',
+            height: '450',
             events: {
                 'onReady': onPlayerReady
             }
@@ -19,11 +22,16 @@ function onYouTubeIframeAPIReady() {
 }
 
 function onPlayerReady() {
-    console.log("Player is ready.");
+    console.log("Player is ready and video is loaded.");
 }
 
 // Add reflection and display on the timeline
 function addReflection() {
+    if (!player || typeof player.getCurrentTime !== 'function') {
+        alert("Player is not ready yet.");
+        return;
+    }
+
     const currentTime = player.getCurrentTime();
     const reflection = prompt("Enter your reflection:");
     
