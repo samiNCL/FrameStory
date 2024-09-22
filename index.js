@@ -62,8 +62,9 @@ function login(email, password) {
             alert("Login successful!");
             loadTags(token);  // Load tags after successful login
 
-            // Example of loading the video (replace this with actual video ID or logic)
-            const videoId = "dQw4w9WgXcQ";  // Replace with actual video ID or from API response
+            // Load the video
+            const videoUrl = document.getElementById('video-url').value;
+            const videoId = getYouTubeVideoId(videoUrl);
             loadYouTubeAPI();
             loadVideo(videoId);
         } else {
@@ -201,6 +202,14 @@ document.getElementById('login-button').addEventListener('click', () => {
 
 document.getElementById('add-reflection').addEventListener('click', addReflection);
 document.getElementById('send-reflections').addEventListener('click', sendReflections);
+
+// Refresh video based on the input URL
+document.getElementById('refresh-video').addEventListener('click', () => {
+    const videoUrl = document.getElementById('video-url').value;
+    const videoId = getYouTubeVideoId(videoUrl);
+    loadYouTubeAPI();
+    loadVideo(videoId);
+});
 
 // Check for existing token and load tags if logged in
 const storedToken = localStorage.getItem('authToken');
