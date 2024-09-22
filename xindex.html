@@ -20,6 +20,32 @@
             margin-bottom: 20px;
             font-size: 28px;
         }
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        label, input, select {
+            margin-bottom: 10px;
+            font-size: 16px;
+            padding: 5px;
+            width: 100%;
+            max-width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
         #video-container {
             position: relative;
             background: #fff;
@@ -103,20 +129,84 @@
         tbody tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        #send-reflections {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 25px;
+            background-color: #FF5722;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #send-reflections:hover {
+            background-color: #E64A19;
+        }
+        /* Star Rating Styles */
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .star {
+            font-size: 24px;
+            color: #ccc;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: color 0.3s ease;
+        }
+        .star.selected {
+            color: orange;
+        }
     </style>
-    <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
+
     <h1>YouTube Video Annotator</h1>
 
+    <!-- Login Form -->
+    <div id="login-form">
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+
+        <button id="login-button">Login</button>
+    </div>
+
+    <!-- Video and Timeline Container -->
     <div id="video-container">
         <div id="youtube-video"></div>
         <div id="timeline-container"></div>
     </div>
 
+    <!-- Add Reflection Button -->
     <button id="add-reflection">Add Reflection</button>
 
+    <!-- Tag Selection and Input Field -->
+    <label for="tag-select">Select Tag:</label>
+    <select id="tag-select">
+        <option value="">Select an existing tag</option>
+    </select>
+
+    <label for="tag">Or Add New Tag:</label>
+    <input type="text" id="tag" placeholder="Enter new tag for this video">
+
+    <!-- Star Rating -->
+    <div class="star-rating">
+        <span class="star" data-value="1">&#9733;</span>
+        <span class="star" data-value="2">&#9733;</span>
+        <span class="star" data-value="3">&#9733;</span>
+        <span class="star" data-value="4">&#9733;</span>
+        <span class="star" data-value="5">&#9733;</span>
+    </div>
+
     <h2>Reflections</h2>
+
+    <!-- Reflections Table -->
     <table>
         <thead>
             <tr>
@@ -127,6 +217,10 @@
         <tbody id="reflection-table"></tbody>
     </table>
 
+    <!-- Send Reflections Button -->
+    <button id="send-reflections">Send Reflections to API</button>
+
     <script src="index.js"></script>
+
 </body>
 </html>
