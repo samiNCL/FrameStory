@@ -11,6 +11,7 @@ function loadYouTubeAPI() {
     tag.src = "https://www.youtube.com/iframe_api";
     const firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    console.log("YouTube API loaded");
 }
 
 // Called when YouTube Iframe API is ready
@@ -18,7 +19,11 @@ function onYouTubeIframeAPIReady() {
     const youtubeVideoIframe = document.getElementById('youtube-video');
     player = new YT.Player(youtubeVideoIframe, {
         events: {
-            'onReady': onPlayerReady
+            'onReady': onPlayerReady,
+            'onError': (event) => {
+                console.error("Error occurred while loading the player", event);
+                alert("An error occurred while loading the YouTube player.");
+            }
         }
     });
 }
@@ -35,7 +40,14 @@ function onPlayerReady(event) {
 function getYouTubeVideoId(url) {
     const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
     const matches = url.match(regex);
-    return matches ? matches[1] : null;
+    if (matches) {
+        console.log("Video ID extracted successfully:", matches[1]);
+        return matches[1];
+    } else {
+        console.error("Failed to extract video ID from URL");
+        alert("Invalid YouTube link. Please check the URL.");
+        return null;
+    }
 }
 
 // Load the video using YouTube video ID
@@ -47,10 +59,12 @@ function loadVideo(videoUrl) {
     }
     const youtubeVideoIframe = document.getElementById('youtube-video');
     youtubeVideoIframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
+    console.log(`Video with ID ${videoId} is being loaded`);
 }
 
 // Handle login process
 function login(email, password) {
+    console.log("Logging in user...");
     fetch("http://127.0.0.1:8000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -63,7 +77,7 @@ function login(email, password) {
             userName = data.user.name;  // Get user's name
             localStorage.setItem('authToken', token);
             localStorage.setItem('userName', userName);  // Store user's name in local storage
-            alert(`Hi, ${userName}!`);  // Show greeting
+            console.log(`Login successful. Welcome, ${userName}!`);
             hideLoginForm();  // Hide login form
             loadTags(token);  // Load tags after successful login
 
@@ -72,6 +86,7 @@ function login(email, password) {
             loadYouTubeAPI();
             loadVideo(videoUrl);
         } else {
+            console.error("Login failed: Invalid credentials");
             alert("Login failed. Please check your credentials.");
         }
     })
@@ -83,6 +98,7 @@ function login(email, password) {
 
 // Function to load tags after login
 function loadTags(authToken) {
+    console.log("Loading tags...");
     fetch("http://127.0.0.1:8000/api/tags", {
         method: "GET",
         headers: {
@@ -100,10 +116,14 @@ function loadTags(authToken) {
                 option.textContent = tag.title;
                 tagSelect.appendChild(option);
             });
+            console.log("Tags loaded successfully");
+        } else {
+            console.error("Failed to load tags");
         }
     })
     .catch(error => {
         console.error("Error loading tags:", error);
+        alert("Failed to load tags.");
     });
 }
 
@@ -111,6 +131,7 @@ function loadTags(authToken) {
 function addReflection() {
     // Check if the player is ready and playing
     if (!player || !playerReady || typeof player.getCurrentTime !== 'function') {
+        console.error("Player is not ready yet or getCurrentTime() is not available");
         alert("Player is not ready yet.");
         return;
     }
@@ -120,6 +141,7 @@ function addReflection() {
 
     if (reflection) {
         reflections.push({ time: currentTime.toFixed(2), text: reflection });
+        console.log(`Reflection added at ${currentTime.toFixed(2)}s: ${reflection}`);
 
         // Display the reflection in the table
         const reflectionTable = document.getElementById('reflection-table');
@@ -130,6 +152,7 @@ function addReflection() {
         // Add the reflection to the video timeline
         addBalloonToTimeline(currentTime, reflection);
     } else {
+        console.error("Reflection was empty or canceled");
         alert("Please enter a reflection.");
     }
 }
@@ -147,6 +170,7 @@ function addBalloonToTimeline(time, text) {
     });
 
     timelineContainer.appendChild(balloon);
+    console.log(`Reflection balloon added at ${time.toFixed(2)}s`);
 }
 
 // Function to capture star rating
@@ -155,6 +179,7 @@ document.querySelectorAll('.star').forEach(star => {
         currentRating = this.getAttribute('data-value');
         document.querySelectorAll('.star').forEach(s => s.classList.remove('selected'));
         this.classList.add('selected');
+        console.log(`Rating set to ${currentRating} stars`);
     });
 });
 
@@ -169,16 +194,19 @@ function sendReflections() {
     const tag = newTag ? newTag : selectedTag;
 
     if (!token) {
+        console.error("User is not logged in. Cannot send reflections.");
         alert("You must log in to send reflections.");
         return;
     }
 
     if (reflections.length === 0) {
+        console.error("No reflections to send");
         alert("No reflections to send.");
         return;
     }
 
     if (!tag || currentRating === 0) {
+        console.error("Missing tag or rating");
         alert("Please add a tag and rating before sending.");
         return;
     }
@@ -202,7 +230,9 @@ function sendReflections() {
     .then(data => {
         if (data.id) {
             alert("Reflections sent successfully!");
+            console.log("Reflections sent successfully:", data);
         } else {
+            console.error("Failed to send reflections:", data);
             alert("Failed to save reflections.");
         }
     })
@@ -216,13 +246,19 @@ function sendReflections() {
 function hideLoginForm() {
     document.getElementById('login-form').style.display = 'none';  // Hide login form
     document.getElementById('greeting').innerText = `Hi, ${userName}!`;  // Show greeting with user's name
+    console.log(`Hi, ${userName}! Welcome back.`);
 }
 
 // Event listeners
 document.getElementById('login-button').addEventListener('click', () => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    login(email, password);
+    if (email && password) {
+        login(email, password);
+    } else {
+        console.error("Email or password is missing");
+        alert("Please enter both email and password.");
+    }
 });
 
 document.getElementById('add-reflection').addEventListener('click', addReflection);
@@ -231,8 +267,13 @@ document.getElementById('send-reflections').addEventListener('click', sendReflec
 // Refresh video based on the input URL
 document.getElementById('refresh-video').addEventListener('click', () => {
     const videoUrl = document.getElementById('video-url').value;
-    loadYouTubeAPI();
-    loadVideo(videoUrl);
+    if (videoUrl) {
+        loadYouTubeAPI();
+        loadVideo(videoUrl);
+    } else {
+        console.error("Video URL is missing");
+        alert("Please enter a YouTube video URL.");
+    }
 });
 
 // Check if user is already logged in
