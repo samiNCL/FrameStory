@@ -79,12 +79,27 @@
             if (response.status === 401) {
                 throw new Error("Invalid credentials");
             }
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
             return response.json();
         })
         .then(data => {
+            console.log("Login API response:", data);
+
+            // Adjusted based on API response structure
             if (data.access_token) {
                 token = data.access_token;
-                userName = data.user.name;
+
+                // Handle different possible structures for user information
+                if (data.user && data.user.name) {
+                    userName = data.user.name;
+                } else if (data.name) {
+                    userName = data.name;
+                } else {
+                    userName = email; // Fallback to email if name is not provided
+                }
+
                 localStorage.setItem('authToken', token);
                 localStorage.setItem('userName', userName);
                 console.log(`Login successful. Welcome, ${userName}!`);
@@ -99,7 +114,7 @@
                     console.log("No video URL provided after login.");
                 }
             } else {
-                console.error("Login failed: Invalid credentials");
+                console.error("Login failed: Invalid response from API");
                 showNotification("Login failed. Please check your credentials.", "error");
             }
         })
@@ -124,6 +139,9 @@
                 handleUnauthorized();
                 throw new Error("Unauthorized");
             }
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
             return response.json();
         })
         .then(data => {
@@ -138,6 +156,7 @@
                 console.log("Tags loaded successfully");
             } else {
                 console.error("Failed to load tags");
+                showNotification("Failed to load tags.", "error");
             }
         })
         .catch(error => {
@@ -154,7 +173,7 @@
             return;
         }
 
-        const currentTime = player.getCurrentTime();  // Get the current time from the video player
+        const currentTime = player.getCurrentTime();
         const reflectionText = document.getElementById('reflection-text').value.trim();
 
         if (reflectionText) {
@@ -260,6 +279,9 @@
             if (response.status === 401) {
                 handleUnauthorized();
                 throw new Error("Unauthorized");
+            }
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
             }
             return response.json();
         })
