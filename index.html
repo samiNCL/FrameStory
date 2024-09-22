@@ -1,192 +1,226 @@
-let player;
-let reflections = [];
-let currentRating = 0;
-let token = null;  // Store authentication token after login
-
-// API base URL (adjust to your actual API URL)
-const apiBaseUrl = "http://127.0.0.1:8000";  // Replace with actual API
-
-// Function to handle star rating selection
-const stars = document.querySelectorAll('.star');
-stars.forEach(star => {
-    star.addEventListener('click', function () {
-        currentRating = this.getAttribute('data-value');
-        updateStarRating();
-    });
-});
-
-// Update star rating display
-function updateStarRating() {
-    stars.forEach(star => {
-        if (star.getAttribute('data-value') <= currentRating) {
-            star.classList.add('selected');
-        } else {
-            star.classList.remove('selected');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Annotator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+            line-height: 1.6;
         }
-    });
-}
-
-// Check if token is available in localStorage
-function checkForToken() {
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
-        token = storedToken;
-        loadTags(token);  // Load tags using the stored token
-    }
-}
-
-// Function to log in and get a token (uses localStorage to store token)
-function login(email, password) {
-    fetch(`${apiBaseUrl}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.access_token) {
-            token = data.access_token;
-
-            // Store token in localStorage (browser-compatible)
-            localStorage.setItem('authToken', token);
-            alert("Login successful!");
-            loadTags(token);  // Load tags after successful login
-        } else {
-            alert("Login failed. Please check your credentials.");
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-size: 28px;
         }
-    })
-    .catch(error => {
-        console.error("Login error:", error);
-        alert("An error occurred during login.");
-    });
-}
-
-// Add reflection to the table and video timeline
-function addReflection() {
-    if (!player || typeof player.getCurrentTime !== 'function') {
-        alert("Player is not ready yet.");
-        return;
-    }
-
-    const currentTime = player.getCurrentTime();
-    const reflection = prompt("Enter your reflection:");
-
-    if (reflection) {
-        reflections.push({ time: currentTime.toFixed(2), text: reflection });
-
-        const reflectionTable = document.getElementById('reflection-table');
-        const newRow = reflectionTable.insertRow();
-        newRow.insertCell(0).innerText = `${currentTime.toFixed(2)}s`;
-        newRow.insertCell(1).innerText = reflection;
-
-        addBalloonToTimeline(currentTime, reflection);
-    }
-}
-
-// Add a balloon to the video timeline for a reflection
-function addBalloonToTimeline(time, text) {
-    const timelineContainer = document.getElementById('timeline-container');
-    const balloon = document.createElement('div');
-    balloon.classList.add('timeline-label');
-    balloon.style.left = `${(time / player.getDuration()) * 100}%`;
-    balloon.innerText = text;
-
-    balloon.addEventListener('click', () => {
-        player.seekTo(time);
-    });
-
-    timelineContainer.appendChild(balloon);
-}
-
-// Function to load existing tags from the API
-function loadTags(authToken) {
-    fetch(`${apiBaseUrl}/api/tags`, {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${authToken}`,
-            "Content-Type": "application/json"
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        const tagSelect = document.getElementById('tag-select');
-        if (data && data.tags) {
-            data.tags.forEach(tag => {
-                const option = document.createElement('option');
-                option.value = tag.title;
-                option.textContent = tag.title;
-                tagSelect.appendChild(option);
-            });
+        label, input, select {
+            margin-bottom: 10px;
+            font-size: 16px;
+            padding: 5px;
+            width: 100%;
+            max-width: 300px;
         }
-    })
-    .catch(error => {
-        console.error("Error loading tags:", error);
-    });
-}
-
-// Function to send reflections to the API
-function sendReflections() {
-    const videoId = new URLSearchParams(window.location.search).get('videoId');
-    const tagSelect = document.getElementById('tag-select');
-    const newTag = document.getElementById('tag').value;
-    const selectedTag = tagSelect.value;
-
-    const tag = newTag ? newTag : selectedTag;  // Use new tag if provided, else the selected tag
-
-    if (!token) {
-        alert("You must log in to send reflections.");
-        return;
-    }
-
-    if (reflections.length === 0) {
-        alert("No reflections to send.");
-        return;
-    }
-
-    if (!tag || currentRating === 0) {
-        alert("Please add a tag and rating before sending.");
-        return;
-    }
-
-    const payload = {
-        text: videoId,  // Send video ID
-        reflection: JSON.stringify(reflections),  // Reflections data
-        tag: tag,  // Either new or selected tag
-        rating: currentRating  // Video rating
-    };
-
-    fetch(`${apiBaseUrl}/api/resources`, {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.id) {
-            alert("Reflections sent successfully!");
-        } else {
-            alert("Failed to save reflections.");
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
         }
-    })
-    .catch(error => {
-        console.error("Error sending reflections:", error);
-        alert("Failed to send reflections.");
-    });
-}
+        button:hover {
+            background-color: #45a049;
+        }
+        #video-container {
+            position: relative;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        #youtube-video {
+            width: 100%;
+            max-width: 800px;
+            height: 450px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #timeline-container {
+            position: absolute;
+            width: 100%;
+            bottom: -30px;
+            left: 0;
+            height: 30px;
+        }
+        .timeline-label {
+            position: absolute;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+        }
+        .timeline-label:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #add-reflection {
+            display: block;
+            margin: 0 auto;
+            margin-bottom: 20px;
+            padding: 12px 25px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #add-reflection:hover {
+            background-color: #45a049;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 24px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+        }
+        td {
+            padding: 10px;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        #send-reflections {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 25px;
+            background-color: #FF5722;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #send-reflections:hover {
+            background-color: #E64A19;
+        }
+        /* Star Rating Styles */
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .star {
+            font-size: 24px;
+            color: #ccc;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: color 0.3s ease;
+        }
+        .star.selected {
+            color: orange;
+        }
+    </style>
+</head>
+<body>
 
-// Event listeners (browser-compatible, no chrome-specific logic)
-document.getElementById('login-button').addEventListener('click', () => {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    login(email, password);
-});
+    <h1>YouTube Video Annotator</h1>
 
-// Add event listeners for reflection and sending reflections
-document.getElementById('add-reflection').addEventListener('click', addReflection);
-document.getElementById('send-reflections').addEventListener('click', sendReflections);
+    <!-- Login Form -->
+    <div id="login-form">
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
 
-// Check for existing token on page load
-checkForToken();
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+
+        <button id="login-button">Login</button>
+    </div>
+
+    <!-- Video and Timeline Container -->
+    <div id="video-container">
+        <div id="youtube-video"></div>
+        <div id="timeline-container"></div>
+    </div>
+
+    <!-- Add Reflection Button -->
+    <button id="add-reflection">Add Reflection</button>
+
+    <!-- Tag Selection and Input Field -->
+    <label for="tag-select">Select Tag:</label>
+    <select id="tag-select">
+        <option value="">Select an existing tag</option>
+    </select>
+
+    <label for="tag">Or Add New Tag:</label>
+    <input type="text" id="tag" placeholder="Enter new tag for this video">
+
+    <!-- Star Rating -->
+    <div class="star-rating">
+        <span class="star" data-value="1">&#9733;</span>
+        <span class="star" data-value="2">&#9733;</span>
+        <span class="star" data-value="3">&#9733;</span>
+        <span class="star" data-value="4">&#9733;</span>
+        <span class="star" data-value="5">&#9733;</span>
+    </div>
+
+    <h2>Reflections</h2>
+
+    <!-- Reflections Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Reflection</th>
+            </tr>
+        </thead>
+        <tbody id="reflection-table"></tbody>
+    </table>
+
+    <!-- Send Reflections Button -->
+    <button id="send-reflections">Send Reflections to API</button>
+
+    <script src="index.js"></script>
+
+</body>
+</html>
