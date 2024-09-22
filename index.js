@@ -26,6 +26,40 @@ function updateStarRating() {
     });
 }
 
+// Function to log in and get a token
+function login(email, password) {
+    fetch(`${apiBaseUrl}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    })
+    .then(response => {
+        console.log(response);  // Log the entire response
+        return response.json();
+    })
+    .then(data => {
+        if (data.access_token) {
+            token = data.access_token;
+
+            // Check if chrome.storage is available
+            if (typeof chrome !== 'undefined' && chrome.storage) {
+                chrome.storage.local.set({ authToken: token }, function () {
+                    alert("Login successful!");
+                    loadTags(token);  // Load tags after successful login
+                });
+            } else {
+                console.log("Not in Chrome extension context. Token:", token);
+            }
+        } else {
+            alert("Login failed. Please check your credentials.");
+        }
+    })
+    .catch(error => {
+        console.error("Login error:", error);
+        alert("An error occurred during login.");
+    });
+}
+
 // Add reflection and display in the UI
 function addReflection() {
     if (!player || typeof player.getCurrentTime !== 'function') {
@@ -61,40 +95,6 @@ function addBalloonToTimeline(time, text) {
     });
 
     timelineContainer.appendChild(balloon);
-}
-
-// Function to log in and get a token
-function login(email, password) {
-    fetch(`${apiBaseUrl}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-    })
-    .then(response => {
-        console.log(response);  // Log the entire response
-        return response.json();
-    })
-    .then(data => {
-        if (data.access_token) {
-            token = data.access_token;
-
-            // Check if chrome.storage is available
-            if (typeof chrome !== 'undefined' && chrome.storage) {
-                chrome.storage.local.set({ authToken: token }, function () {
-                    alert("Login successful!");
-                    loadTags(token);  // Load tags after successful login
-                });
-            } else {
-                console.log("Not in Chrome extension context. Token:", token);
-            }
-        } else {
-            alert("Login failed. Please check your credentials.");
-        }
-    })
-    .catch(error => {
-        console.error("Login error:", error);
-        alert("An error occurred during login.");
-    });
 }
 
 // Function to load existing tags from the API
@@ -183,5 +183,6 @@ document.getElementById('login-button').addEventListener('click', () => {
     login(email, password);
 });
 
+// Add event listeners for reflection and sending reflections
 document.getElementById('add-reflection').addEventListener('click', addReflection);
 document.getElementById('send-reflections').addEventListener('click', sendReflections);
