@@ -2,7 +2,7 @@ let player;
 let playerReady = false;
 let token = null;  // To store the authentication token
 let reflections = [];
-let currentRating = 0;
+let currentRating = 0;  // Initialize currentRating to store user rating
 
 // Load YouTube API and video
 function loadYouTubeAPI() {
@@ -139,6 +139,15 @@ function addBalloonToTimeline(time, text) {
 
     timelineContainer.appendChild(balloon);
 }
+
+// Function to capture star rating
+document.querySelectorAll('.star').forEach(star => {
+    star.addEventListener('click', function() {
+        currentRating = this.getAttribute('data-value');
+        document.querySelectorAll('.star').forEach(s => s.classList.remove('selected'));
+        this.classList.add('selected');
+    });
+});
 
 // Function to send reflections to the API
 function sendReflections() {
