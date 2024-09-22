@@ -1,43 +1,53 @@
 let player;
+let playerReady = false;
+let token = null;  // To store the authentication token
 let reflections = [];
 let currentRating = 0;
-let token = null;  // Store authentication token after login
 
-// API base URL (adjust to your actual API URL)
-const apiBaseUrl = "http://127.0.0.1:8000";  // Replace with actual API
+// Load YouTube API and video
+function loadYouTubeAPI() {
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+}
 
-// Function to handle star rating selection
-const stars = document.querySelectorAll('.star');
-stars.forEach(star => {
-    star.addEventListener('click', function () {
-        currentRating = this.getAttribute('data-value');
-        updateStarRating();
-    });
-});
-
-// Update star rating display
-function updateStarRating() {
-    stars.forEach(star => {
-        if (star.getAttribute('data-value') <= currentRating) {
-            star.classList.add('selected');
-        } else {
-            star.classList.remove('selected');
+// Called when YouTube Iframe API is ready
+function onYouTubeIframeAPIReady() {
+    const youtubeVideoIframe = document.getElementById('youtube-video');
+    player = new YT.Player(youtubeVideoIframe, {
+        events: {
+            'onReady': onPlayerReady
         }
     });
 }
 
-// Check if token is available in localStorage
-function checkForToken() {
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
-        token = storedToken;
-        loadTags(token);  // Load tags using the stored token
-    }
+// Called when player is fully ready
+function onPlayerReady(event) {
+    playerReady = true;
+    console.log("Player is ready");
 }
 
-// Function to log in and get a token (uses localStorage to store token)
+// Load the video using YouTube video ID
+function loadVideo(videoId) {
+    if (!videoId) {
+        alert("Invalid YouTube link!");
+        return;
+    }
+    const youtubeVideoIframe = document.getElementById('youtube-video');
+    youtubeVideoIframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
+}
+
+// Get YouTube video ID from URL
+function getYouTubeVideoId(url) {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const matches = url.match(regex);
+    return matches ? matches[1] : null;
+}
+
+// Handle login process
 function login(email, password) {
-    fetch(`${apiBaseUrl}/api/login`, {
+    fetch("http://127.0.0.1:8000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -46,11 +56,14 @@ function login(email, password) {
     .then(data => {
         if (data.access_token) {
             token = data.access_token;
-
-            // Store token in localStorage (browser-compatible)
             localStorage.setItem('authToken', token);
             alert("Login successful!");
             loadTags(token);  // Load tags after successful login
+
+            // Example of loading the video (replace this with actual video ID or logic)
+            const videoId = "dQw4w9WgXcQ";  // Replace with actual video ID or from API response
+            loadYouTubeAPI();
+            loadVideo(videoId);
         } else {
             alert("Login failed. Please check your credentials.");
         }
@@ -61,9 +74,35 @@ function login(email, password) {
     });
 }
 
-// Add reflection to the table and video timeline
+// Function to load tags after login
+function loadTags(authToken) {
+    fetch("http://127.0.0.1:8000/api/tags", {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const tagSelect = document.getElementById('tag-select');
+        if (data && data.tags) {
+            data.tags.forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag.title;
+                option.textContent = tag.title;
+                tagSelect.appendChild(option);
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Error loading tags:", error);
+    });
+}
+
+// Function to handle adding reflections
 function addReflection() {
-    if (!player || typeof player.getCurrentTime !== 'function') {
+    if (!player || !playerReady || typeof player.getCurrentTime !== 'function') {
         alert("Player is not ready yet.");
         return;
     }
@@ -98,32 +137,6 @@ function addBalloonToTimeline(time, text) {
     timelineContainer.appendChild(balloon);
 }
 
-// Function to load existing tags from the API
-function loadTags(authToken) {
-    fetch(`${apiBaseUrl}/api/tags`, {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${authToken}`,
-            "Content-Type": "application/json"
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        const tagSelect = document.getElementById('tag-select');
-        if (data && data.tags) {
-            data.tags.forEach(tag => {
-                const option = document.createElement('option');
-                option.value = tag.title;
-                option.textContent = tag.title;
-                tagSelect.appendChild(option);
-            });
-        }
-    })
-    .catch(error => {
-        console.error("Error loading tags:", error);
-    });
-}
-
 // Function to send reflections to the API
 function sendReflections() {
     const videoId = new URLSearchParams(window.location.search).get('videoId');
@@ -131,7 +144,7 @@ function sendReflections() {
     const newTag = document.getElementById('tag').value;
     const selectedTag = tagSelect.value;
 
-    const tag = newTag ? newTag : selectedTag;  // Use new tag if provided, else the selected tag
+    const tag = newTag ? newTag : selectedTag;
 
     if (!token) {
         alert("You must log in to send reflections.");
@@ -149,13 +162,13 @@ function sendReflections() {
     }
 
     const payload = {
-        text: videoId,  // Send video ID
-        reflection: JSON.stringify(reflections),  // Reflections data
-        tag: tag,  // Either new or selected tag
-        rating: currentRating  // Video rating
+        text: videoId,
+        reflection: JSON.stringify(reflections),
+        tag: tag,
+        rating: currentRating
     };
 
-    fetch(`${apiBaseUrl}/api/resources`, {
+    fetch("http://127.0.0.1:8000/api/resources", {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`,
@@ -177,16 +190,19 @@ function sendReflections() {
     });
 }
 
-// Event listeners (browser-compatible, no chrome-specific logic)
+// Event listeners
 document.getElementById('login-button').addEventListener('click', () => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     login(email, password);
 });
 
-// Add event listeners for reflection and sending reflections
 document.getElementById('add-reflection').addEventListener('click', addReflection);
 document.getElementById('send-reflections').addEventListener('click', sendReflections);
 
-// Check for existing token on page load
-checkForToken();
+// Check for existing token and load tags if logged in
+const storedToken = localStorage.getItem('authToken');
+if (storedToken) {
+    token = storedToken;
+    loadTags(token);
+}
