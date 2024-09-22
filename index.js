@@ -26,6 +26,8 @@ function onYouTubeIframeAPIReady() {
 function onPlayerReady(event) {
     playerReady = true;
     console.log("Player is ready");
+    document.getElementById('add-reflection').disabled = false;  // Enable the reflection button
+    document.getElementById('send-reflections').disabled = false;  // Enable the send button
 }
 
 // Load the video using YouTube video ID
