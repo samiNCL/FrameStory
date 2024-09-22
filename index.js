@@ -55,7 +55,7 @@ function onPlayerReady(event) {
     document.querySelector('table').style.display = 'table';
     document.getElementById('send-reflections').style.display = 'block';
 
-    // Fetch existing reflections for this video
+    // Fetch existing reflections for this video AFTER videoId is set and player is ready
     fetchReflectionsForVideo(videoId);
 }
 
@@ -124,6 +124,11 @@ function loadTags(authToken) {
 function fetchReflectionsForVideo(videoId) {
     if (!token) {
         console.error("User is not authenticated.");
+        return;
+    }
+
+    if (!videoId) {
+        console.error("videoId is not set. Cannot fetch reflections.");
         return;
     }
 
