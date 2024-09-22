@@ -1,31 +1,27 @@
+// index.js
+
 let player;
 let playerReady = false;
-let token = null;  // To store the authentication token
+let token = null;
 let reflections = [];
 let currentRating = 0;
-let videoId = null;  // Declare videoId globally
+let videoId = null;
 
-// Load YouTube API and video
+// Load YouTube API and initialize the player
 function loadYouTubeAPI() {
-    if (window.YT && YT.Player) {  // Check if the API is already loaded
+    if (window.YT && YT.Player) {
         console.log("YouTube IFrame API already loaded.");
         onYouTubeIframeAPIReady();
     } else {
         console.log("Loading YouTube IFrame API script.");
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
-        tag.onload = function() {
-            console.log("YouTube IFrame API script loaded successfully.");
-        };
-        tag.onerror = function() {
-            console.error("Failed to load YouTube IFrame API script.");
-        };
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     }
 }
 
-// Attach onYouTubeIframeAPIReady to the global window object
+// YouTube IFrame API ready callback
 function onYouTubeIframeAPIReady() {
     console.log("YouTube IFrame API is ready.");
     if (!videoId) {
@@ -35,7 +31,7 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('youtube-video', {
         height: '450',
         width: '800',
-        videoId: videoId,  // Use the global videoId
+        videoId: videoId,
         events: {
             'onReady': onPlayerReady,
             'onError': function(event) {
@@ -46,10 +42,11 @@ function onYouTubeIframeAPIReady() {
 }
 window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady; // Ensure global scope
 
+// Player ready callback
 function onPlayerReady(event) {
     playerReady = true;
     console.log("Player is ready.");
-    // Now that the player is ready, display the necessary elements
+    // Display UI elements
     document.getElementById('video-container').style.display = 'flex';
     document.getElementById('add-reflection').style.display = 'block';
     document.getElementById('tag-container').style.display = 'block';
@@ -59,12 +56,14 @@ function onPlayerReady(event) {
     document.getElementById('send-reflections').style.display = 'block';
 }
 
+// Extract YouTube video ID from URL
 function getYouTubeVideoId(url) {
     const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?\/)|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
     const matches = url.match(regex);
     return matches ? matches[1] : null;
 }
 
+// Handle login
 function login(email, password) {
     fetch("http://127.0.0.1:8000/api/login", {
         method: "POST",
@@ -79,9 +78,8 @@ function login(email, password) {
             alert("Login successful!");
             loadTags(token);
 
-            // Hide the login form after successful login
+            // Hide the login form and show the video URL input
             document.getElementById('login-form').style.display = 'none';
-            // Show the video URL input container
             document.getElementById('video-url-container').style.display = 'block';
         } else {
             alert("Login failed. Please check your credentials.");
@@ -93,7 +91,7 @@ function login(email, password) {
     });
 }
 
-// Function to load tags after login
+// Load tags from the backend
 function loadTags(authToken) {
     fetch("http://127.0.0.1:8000/api/tags", {
         method: "GET",
@@ -119,7 +117,7 @@ function loadTags(authToken) {
     });
 }
 
-// Function to handle adding reflections
+// Add reflection at the current video time
 function addReflection() {
     if (!player || !playerReady || typeof player.getCurrentTime !== 'function') {
         alert("Player is not ready yet.");
@@ -142,7 +140,7 @@ function addReflection() {
     }
 }
 
-// Add a balloon to the video timeline for a reflection
+// Add a balloon marker to the timeline
 function addBalloonToTimeline(time, text) {
     const timelineContainer = document.getElementById('timeline-container');
     const balloon = document.createElement('div');
@@ -164,7 +162,7 @@ function addBalloonToTimeline(time, text) {
     timelineContainer.appendChild(balloon);
 }
 
-// Function to send reflections to the API
+// Send reflections to the backend
 function sendReflections() {
     const tagSelect = document.getElementById('tag-select');
     const newTag = document.getElementById('tag').value;
@@ -206,7 +204,7 @@ function sendReflections() {
     .then(data => {
         if (data.id) {
             alert("Reflections sent successfully!");
-            // Optionally, clear the reflections and reset the form
+            // Clear reflections and reset form
             reflections = [];
             document.getElementById('reflection-table').innerHTML = '';
             document.getElementById('timeline-container').innerHTML = '';
@@ -223,7 +221,7 @@ function sendReflections() {
     });
 }
 
-// Function to handle star rating selection
+// Handle star rating selection
 function handleStarRating() {
     const stars = document.querySelectorAll('.star');
     stars.forEach(star => {
@@ -234,7 +232,7 @@ function handleStarRating() {
     });
 }
 
-// Update the star display based on the current rating
+// Update star display based on rating
 function updateStarDisplay(rating) {
     const stars = document.querySelectorAll('.star');
     stars.forEach(star => {
@@ -247,7 +245,7 @@ function updateStarDisplay(rating) {
     });
 }
 
-// Reset the star rating display
+// Reset star rating display
 function resetRatingStars() {
     currentRating = 0;
     updateStarDisplay(currentRating);
@@ -269,7 +267,7 @@ document.getElementById('load-video-button').addEventListener('click', () => {
     videoId = getYouTubeVideoId(videoUrl);
     if (videoId) {
         console.log("Video ID set to:", videoId);
-        loadYouTubeAPI();  // Load the YouTube API script
+        loadYouTubeAPI();  // Load the YouTube API script and initialize the player
         // Hide the video URL input after loading the video
         document.getElementById('video-url-container').style.display = 'none';
     } else {
@@ -277,7 +275,7 @@ document.getElementById('load-video-button').addEventListener('click', () => {
     }
 });
 
-// Initialize the star rating functionality
+// Initialize star rating functionality
 handleStarRating();
 
 // Check for existing token and load tags if logged in
