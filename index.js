@@ -30,21 +30,22 @@ function onPlayerReady(event) {
     document.getElementById('send-reflections').disabled = false;  // Enable the send button
 }
 
+// Extract YouTube video ID from URL
+function getYouTubeVideoId(url) {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const matches = url.match(regex);
+    return matches ? matches[1] : null;
+}
+
 // Load the video using YouTube video ID
-function loadVideo(videoId) {
+function loadVideo(videoUrl) {
+    const videoId = getYouTubeVideoId(videoUrl);
     if (!videoId) {
         alert("Invalid YouTube link!");
         return;
     }
     const youtubeVideoIframe = document.getElementById('youtube-video');
     youtubeVideoIframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
-}
-
-// Get YouTube video ID from URL
-function getYouTubeVideoId(url) {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
-    const matches = url.match(regex);
-    return matches ? matches[1] : null;
 }
 
 // Handle login process
@@ -62,11 +63,10 @@ function login(email, password) {
             alert("Login successful!");
             loadTags(token);  // Load tags after successful login
 
-            // Load the video
+            // Use the URL from the text box
             const videoUrl = document.getElementById('video-url').value;
-            const videoId = getYouTubeVideoId(videoUrl);
             loadYouTubeAPI();
-            loadVideo(videoId);
+            loadVideo(videoUrl);
         } else {
             alert("Login failed. Please check your credentials.");
         }
@@ -142,7 +142,8 @@ function addBalloonToTimeline(time, text) {
 
 // Function to send reflections to the API
 function sendReflections() {
-    const videoId = new URLSearchParams(window.location.search).get('videoId');
+    const videoUrl = document.getElementById('video-url').value;
+    const videoId = getYouTubeVideoId(videoUrl);
     const tagSelect = document.getElementById('tag-select');
     const newTag = document.getElementById('tag').value;
     const selectedTag = tagSelect.value;
@@ -206,9 +207,8 @@ document.getElementById('send-reflections').addEventListener('click', sendReflec
 // Refresh video based on the input URL
 document.getElementById('refresh-video').addEventListener('click', () => {
     const videoUrl = document.getElementById('video-url').value;
-    const videoId = getYouTubeVideoId(videoUrl);
     loadYouTubeAPI();
-    loadVideo(videoId);
+    loadVideo(videoUrl);
 });
 
 // Check for existing token and load tags if logged in
