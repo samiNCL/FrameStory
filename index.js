@@ -3,6 +3,7 @@ let playerReady = false;
 let token = null;  // To store the authentication token
 let reflections = [];
 let currentRating = 0;  // Initialize currentRating to store user rating
+let userName = '';  // To store the user's name from the API
 
 // Load YouTube API and video
 function loadYouTubeAPI() {
@@ -59,8 +60,11 @@ function login(email, password) {
     .then(data => {
         if (data.access_token) {
             token = data.access_token;
+            userName = data.user.name;  // Get user's name
             localStorage.setItem('authToken', token);
-            alert("Login successful!");
+            localStorage.setItem('userName', userName);  // Store user's name in local storage
+            alert(`Hi, ${userName}!`);  // Show greeting
+            hideLoginForm();  // Hide login form
             loadTags(token);  // Load tags after successful login
 
             // Use the URL from the text box
@@ -208,6 +212,12 @@ function sendReflections() {
     });
 }
 
+// Hide login form and show greeting
+function hideLoginForm() {
+    document.getElementById('login-form').style.display = 'none';  // Hide login form
+    document.getElementById('greeting').innerText = `Hi, ${userName}!`;  // Show greeting with user's name
+}
+
 // Event listeners
 document.getElementById('login-button').addEventListener('click', () => {
     const email = document.getElementById('email').value;
@@ -215,10 +225,7 @@ document.getElementById('login-button').addEventListener('click', () => {
     login(email, password);
 });
 
-// Event listener for adding reflection
 document.getElementById('add-reflection').addEventListener('click', addReflection);
-
-// Event listener for sending reflections to the API
 document.getElementById('send-reflections').addEventListener('click', sendReflections);
 
 // Refresh video based on the input URL
@@ -228,9 +235,12 @@ document.getElementById('refresh-video').addEventListener('click', () => {
     loadVideo(videoUrl);
 });
 
-// Check for existing token and load tags if logged in
+// Check if user is already logged in
 const storedToken = localStorage.getItem('authToken');
-if (storedToken) {
+const storedUserName = localStorage.getItem('userName');
+if (storedToken && storedUserName) {
     token = storedToken;
-    loadTags(token);
+    userName = storedUserName;
+    hideLoginForm();
+    loadTags(token);  // Load tags if user is already logged in
 }
