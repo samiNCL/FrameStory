@@ -105,23 +105,28 @@ function loadTags(authToken) {
 
 // Function to handle adding reflections
 function addReflection() {
+    // Check if the player is ready and playing
     if (!player || !playerReady || typeof player.getCurrentTime !== 'function') {
         alert("Player is not ready yet.");
         return;
     }
 
-    const currentTime = player.getCurrentTime();
+    const currentTime = player.getCurrentTime();  // Get the current time from the video player
     const reflection = prompt("Enter your reflection:");
 
     if (reflection) {
         reflections.push({ time: currentTime.toFixed(2), text: reflection });
 
+        // Display the reflection in the table
         const reflectionTable = document.getElementById('reflection-table');
         const newRow = reflectionTable.insertRow();
         newRow.insertCell(0).innerText = `${currentTime.toFixed(2)}s`;
         newRow.insertCell(1).innerText = reflection;
 
+        // Add the reflection to the video timeline
         addBalloonToTimeline(currentTime, reflection);
+    } else {
+        alert("Please enter a reflection.");
     }
 }
 
@@ -210,7 +215,10 @@ document.getElementById('login-button').addEventListener('click', () => {
     login(email, password);
 });
 
+// Event listener for adding reflection
 document.getElementById('add-reflection').addEventListener('click', addReflection);
+
+// Event listener for sending reflections to the API
 document.getElementById('send-reflections').addEventListener('click', sendReflections);
 
 // Refresh video based on the input URL
