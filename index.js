@@ -7,61 +7,57 @@ let videoId = null;  // Declare videoId globally
 
 // Load YouTube API and video
 function loadYouTubeAPI() {
-    if (window.YT) {  // Check if the API is already loaded
+    if (window.YT && YT.Player) {  // Check if the API is already loaded
+        console.log("YouTube IFrame API already loaded.");
         onYouTubeIframeAPIReady();
     } else {
+        console.log("Loading YouTube IFrame API script.");
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
+        tag.onload = function() {
+            console.log("YouTube IFrame API script loaded successfully.");
+        };
+        tag.onerror = function() {
+            console.error("Failed to load YouTube IFrame API script.");
+        };
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     }
 }
 
-// Called when YouTube Iframe API is ready
-function onYouTubeIframeAPIReady() {
+// Attach onYouTubeIframeAPIReady to the global window object
+window.onYouTubeIframeAPIReady = function() {
+    console.log("YouTube IFrame API is ready.");
+    if (!videoId) {
+        console.error("videoId is not set. Cannot initialize player.");
+        return;
+    }
     player = new YT.Player('youtube-video', {
         height: '450',
         width: '800',
         videoId: videoId,  // Use the global videoId
         events: {
-            'onReady': onPlayerReady
+            'onReady': onPlayerReady,
+            'onError': function(event) {
+                console.error("YouTube Player Error:", event.data);
+            }
         }
     });
-}
+};
 
-// Called when player is fully ready
 function onPlayerReady(event) {
     playerReady = true;
-    console.log("Player is ready");
-    if (videoId) {
-        player.loadVideoById(videoId);
-    }
+    console.log("Player is ready.");
+    // Now that the player is ready, display the necessary elements
+    document.getElementById('video-container').style.display = 'flex';
+    document.getElementById('add-reflection').style.display = 'block';
+    document.getElementById('tag-container').style.display = 'block';
+    document.querySelector('.star-rating').style.display = 'flex';
+    document.querySelector('h2').style.display = 'block';
+    document.querySelector('table').style.display = 'table';
+    document.getElementById('send-reflections').style.display = 'block';
 }
 
-// Load the video using YouTube video ID
-function loadVideo(id) {
-    if (!id) {
-        alert("Invalid YouTube video ID!");
-        return;
-    }
-    videoId = id;  // Set the global videoId variable
-    if (playerReady) {
-        // If player is already ready, load the video
-        player.loadVideoById(videoId);
-    } else {
-        // Player is not ready yet
-        console.log("Player not ready, will load video when ready.");
-    }
-}
-
-// Get YouTube video ID from URL
-function getYouTubeVideoId(url) {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
-    const matches = url.match(regex);
-    return matches ? matches[1] : null;
-}
-
-// Handle login process
 function login(email, password) {
     fetch("http://127.0.0.1:8000/api/login", {
         method: "POST",
@@ -74,12 +70,15 @@ function login(email, password) {
             token = data.access_token;
             localStorage.setItem('authToken', token);
             alert("Login successful!");
-            loadTags(token);  // Load tags after successful login
+            loadTags(token);
 
-            // Example of loading the video (replace this with actual video ID or logic)
-            // For demonstration, let's assume the video URL is provided by the API
-            // Replace this with your actual logic to get the video ID
-            videoId = "dQw4w9WgXcQ";  // Replace with actual video ID or from API response
+            // Set the videoId before loading the API
+            videoId = "your_actual_video_id_here";  // Replace with the actual video ID
+            console.log("Video ID set to:", videoId);
+
+            // Hide the login form after successful login
+            document.getElementById('login-form').style.display = 'none';
+
             loadYouTubeAPI();  // Load the YouTube API script
         } else {
             alert("Login failed. Please check your credentials.");
@@ -121,6 +120,7 @@ function loadTags(authToken) {
 function addReflection() {
     if (!player || !playerReady || typeof player.getCurrentTime !== 'function') {
         alert("Player is not ready yet.");
+        console.error("Player is not ready. playerReady:", playerReady);
         return;
     }
 
@@ -269,6 +269,11 @@ if (storedToken) {
     token = storedToken;
     loadTags(token);
     // Assume the video ID is stored in local storage or retrieved from the API
-    videoId = "dQw4w9WgXcQ";  // Replace with actual video ID or logic to retrieve it
+    videoId = "your_actual_video_id_here";  // Replace with actual video ID or logic to retrieve it
+    console.log("Existing token found. Video ID set to:", videoId);
+
+    // Hide the login form and display the necessary elements
+    document.getElementById('login-form').style.display = 'none';
+
     loadYouTubeAPI();
 }
