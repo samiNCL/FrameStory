@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Annotator</title>
     <style>
+        /* Styles remain the same as in your original code */
+
         body {
             font-family: Arial, sans-serif;
             max-width: 900px;
@@ -108,11 +110,13 @@
             margin-top: 30px;
             font-size: 24px;
             color: #333;
+            display: none;  /* Initially hidden until login */
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            display: none;  /* Initially hidden until login */
         }
         table, th, td {
             border: 1px solid #ddd;
@@ -177,6 +181,13 @@
         <button id="login-button">Login</button>
     </div>
 
+    <!-- Video URL Input -->
+    <div id="video-url-container" style="display: none; text-align: center; margin-bottom: 20px;">
+        <label for="video-url">Enter YouTube Video URL:</label>
+        <input type="text" id="video-url" placeholder="https://www.youtube.com/watch?v=VIDEO_ID" style="width: 80%;">
+        <button id="load-video-button">Load Video</button>
+    </div>
+
     <!-- Video and Timeline Container -->
     <div id="video-container">
         <div id="youtube-video"></div>
@@ -206,10 +217,10 @@
         <span class="star" data-value="5">&#9733;</span>
     </div>
 
-    <h2 style="display: none;">Reflections</h2>
+    <h2>Reflections</h2>
 
     <!-- Reflections Table -->
-    <table style="display: none;">
+    <table>
         <thead>
             <tr>
                 <th>Time</th>
@@ -221,6 +232,9 @@
 
     <!-- Send Reflections Button -->
     <button id="send-reflections">Send Reflections to API</button>
+
+    <!-- Include the YouTube IFrame API script -->
+    <script src="https://www.youtube.com/iframe_api"></script>
 
     <script src="index.js"></script>
 
