@@ -26,7 +26,7 @@ function loadYouTubeAPI() {
 }
 
 // Attach onYouTubeIframeAPIReady to the global window object
-window.onYouTubeIframeAPIReady = function() {
+function onYouTubeIframeAPIReady() {
     console.log("YouTube IFrame API is ready.");
     if (!videoId) {
         console.error("videoId is not set. Cannot initialize player.");
@@ -43,7 +43,8 @@ window.onYouTubeIframeAPIReady = function() {
             }
         }
     });
-};
+}
+window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady; // Ensure global scope
 
 function onPlayerReady(event) {
     playerReady = true;
@@ -56,6 +57,12 @@ function onPlayerReady(event) {
     document.querySelector('h2').style.display = 'block';
     document.querySelector('table').style.display = 'table';
     document.getElementById('send-reflections').style.display = 'block';
+}
+
+function getYouTubeVideoId(url) {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?\/)|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const matches = url.match(regex);
+    return matches ? matches[1] : null;
 }
 
 function login(email, password) {
@@ -72,14 +79,10 @@ function login(email, password) {
             alert("Login successful!");
             loadTags(token);
 
-            // Set the videoId before loading the API
-            videoId = "your_actual_video_id_here";  // Replace with the actual video ID
-            console.log("Video ID set to:", videoId);
-
             // Hide the login form after successful login
             document.getElementById('login-form').style.display = 'none';
-
-            loadYouTubeAPI();  // Load the YouTube API script
+            // Show the video URL input container
+            document.getElementById('video-url-container').style.display = 'block';
         } else {
             alert("Login failed. Please check your credentials.");
         }
@@ -260,6 +263,20 @@ document.getElementById('login-button').addEventListener('click', () => {
 document.getElementById('add-reflection').addEventListener('click', addReflection);
 document.getElementById('send-reflections').addEventListener('click', sendReflections);
 
+// Event listener for loading the video
+document.getElementById('load-video-button').addEventListener('click', () => {
+    const videoUrl = document.getElementById('video-url').value;
+    videoId = getYouTubeVideoId(videoUrl);
+    if (videoId) {
+        console.log("Video ID set to:", videoId);
+        loadYouTubeAPI();  // Load the YouTube API script
+        // Hide the video URL input after loading the video
+        document.getElementById('video-url-container').style.display = 'none';
+    } else {
+        alert("Invalid YouTube video URL. Please try again.");
+    }
+});
+
 // Initialize the star rating functionality
 handleStarRating();
 
@@ -268,12 +285,7 @@ const storedToken = localStorage.getItem('authToken');
 if (storedToken) {
     token = storedToken;
     loadTags(token);
-    // Assume the video ID is stored in local storage or retrieved from the API
-    videoId = "your_actual_video_id_here";  // Replace with actual video ID or logic to retrieve it
-    console.log("Existing token found. Video ID set to:", videoId);
-
-    // Hide the login form and display the necessary elements
+    // Hide the login form and show the video URL input
     document.getElementById('login-form').style.display = 'none';
-
-    loadYouTubeAPI();
+    document.getElementById('video-url-container').style.display = 'block';
 }
