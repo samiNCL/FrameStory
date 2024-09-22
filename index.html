@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Meta and Title -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Annotator</title>
+
+    <!-- Styles -->
     <style>
+        /* General Styles */
         body {
             font-family: Arial, sans-serif;
             max-width: 900px;
@@ -14,26 +18,34 @@
             color: #333;
             line-height: 1.6;
         }
-        h1 {
+        h1, h2 {
             text-align: center;
             color: #4CAF50;
+        }
+        h1 {
             margin-bottom: 20px;
             font-size: 28px;
         }
+        h2 {
+            margin-top: 30px;
+            font-size: 24px;
+        }
+
+        /* Login Form */
         #login-form {
             display: flex;
             flex-direction: column;
             align-items: center;
             margin-bottom: 20px;
         }
-        label, input, select {
+        label, input {
             margin-bottom: 10px;
             font-size: 16px;
             padding: 5px;
             width: 100%;
             max-width: 300px;
         }
-        button {
+        #login-form button {
             padding: 10px 20px;
             background-color: #4CAF50;
             color: white;
@@ -43,9 +55,29 @@
             font-size: 16px;
             margin-top: 10px;
         }
-        button:hover {
+        #login-form button:hover {
             background-color: #45a049;
         }
+
+        /* User Info and Logout */
+        #user-info {
+            display: none;
+            text-align: center;
+        }
+        #logout-button {
+            padding: 10px 20px;
+            background-color: #FF5722;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #logout-button:hover {
+            background-color: #E64A19;
+        }
+
+        /* Video Container */
         #video-container {
             position: relative;
             background: #fff;
@@ -87,10 +119,9 @@
             background-color: #4CAF50;
             color: white;
         }
-        #add-reflection {
-            display: block;
-            margin: 0 auto;
-            margin-bottom: 20px;
+
+        /* Buttons */
+        button {
             padding: 12px 25px;
             background-color: #4CAF50;
             color: white;
@@ -98,17 +129,46 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            margin: 10px auto;
+            display: block;
             transition: background-color 0.3s ease;
         }
-        #add-reflection:hover {
+        button:hover {
             background-color: #45a049;
         }
-        h2 {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 24px;
-            color: #333;
+
+        /* Star Rating Styles */
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
         }
+        .star {
+            font-size: 24px;
+            color: #ccc;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: color 0.3s ease;
+        }
+        .star.selected {
+            color: orange;
+        }
+
+        /* Video URL Input Styles */
+        #video-url-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #video-url {
+            width: 60%;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #refresh-video {
+            padding: 10px 20px;
+        }
+
+        /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -129,49 +189,68 @@
         tbody tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-        #send-reflections {
-            display: block;
-            margin: 20px auto;
-            padding: 12px 25px;
-            background-color: #FF5722;
-            color: white;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #f4f4f9;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s ease;
         }
-        #send-reflections:hover {
-            background-color: #E64A19;
-        }
-        /* Star Rating Styles */
-        .star-rating {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .star {
-            font-size: 24px;
-            color: #ccc;
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
             cursor: pointer;
-            margin: 0 5px;
-            transition: color 0.3s ease;
         }
-        .star.selected {
-            color: orange;
-        }
-        /* Video URL Input Styles */
-        #video-url-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #video-url {
-            width: 60%;
+        #reflection-text {
+            width: 100%;
             padding: 10px;
+            margin-top: 10px;
             font-size: 16px;
         }
-        #refresh-video {
-            padding: 10px 20px;
+
+        /* Notifications */
+        #notifications {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+        }
+        .notification {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            opacity: 0.9;
+        }
+        .notification.success {
+            border-left: 5px solid #4CAF50;
+        }
+        .notification.error {
+            border-left: 5px solid #f44336;
         }
     </style>
 </head>
@@ -179,8 +258,11 @@
 
     <h1>YouTube Video Annotator</h1>
 
-    <!-- Greeting Message -->
-    <h2 id="greeting" style="text-align: center;"></h2>
+    <!-- User Info and Logout -->
+    <div id="user-info">
+        <h2 id="greeting"></h2>
+        <button id="logout-button">Logout</button>
+    </div>
 
     <!-- Login Form -->
     <div id="login-form">
@@ -207,6 +289,16 @@
 
     <!-- Add Reflection Button -->
     <button id="add-reflection" disabled>Add Reflection</button>
+
+    <!-- Reflection Input Modal -->
+    <div id="reflection-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Add Reflection</h2>
+            <textarea id="reflection-text" rows="4" cols="50" placeholder="Enter your reflection here"></textarea>
+            <button id="save-reflection">Save Reflection</button>
+        </div>
+    </div>
 
     <!-- Tag Selection and Input Field -->
     <label for="tag-select">Select Tag:</label>
@@ -242,6 +334,10 @@
     <!-- Send Reflections Button -->
     <button id="send-reflections" disabled>Send Reflections to API</button>
 
+    <!-- Notifications Container -->
+    <div id="notifications"></div>
+
+    <!-- Scripts -->
     <script src="index.js"></script>
 
 </body>
