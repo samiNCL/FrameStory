@@ -2,11 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Annotator</title>
     <style>
-        /* Styles remain the same as in your original code */
-
+        /* General Styles */
         body {
             font-family: Arial, sans-serif;
             max-width: 900px;
@@ -22,6 +20,7 @@
             margin-bottom: 20px;
             font-size: 28px;
         }
+        /* Login Form Styles */
         #login-form {
             display: flex;
             flex-direction: column;
@@ -35,6 +34,7 @@
             width: 100%;
             max-width: 300px;
         }
+        /* Button Styles */
         button {
             padding: 10px 20px;
             background-color: #4CAF50;
@@ -48,6 +48,7 @@
         button:hover {
             background-color: #45a049;
         }
+        /* Video Container Styles */
         #video-container {
             position: relative;
             background: #fff;
@@ -55,7 +56,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
-            display: none;  /* Initially hidden until login */
+            display: none;  /* Initially hidden until video is loaded */
             justify-content: center;
         }
         #youtube-video {
@@ -89,8 +90,9 @@
             background-color: #4CAF50;
             color: white;
         }
+        /* Reflection Button Styles */
         #add-reflection {
-            display: none;  /* Initially hidden until login */
+            display: none;  /* Initially hidden until video is loaded */
             margin: 0 auto;
             margin-bottom: 20px;
             padding: 12px 25px;
@@ -105,18 +107,40 @@
         #add-reflection:hover {
             background-color: #45a049;
         }
+        /* Tag and Rating Styles */
+        #tag-container {
+            display: none;  /* Initially hidden until video is loaded */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .star-rating {
+            display: none;  /* Initially hidden until video is loaded */
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .star {
+            font-size: 24px;
+            color: #ccc;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: color 0.3s ease;
+        }
+        .star.selected {
+            color: orange;
+        }
+        /* Reflections Table Styles */
         h2 {
             text-align: center;
             margin-top: 30px;
             font-size: 24px;
             color: #333;
-            display: none;  /* Initially hidden until login */
+            display: none;  /* Initially hidden until video is loaded */
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
-            display: none;  /* Initially hidden until login */
+            display: none;  /* Initially hidden until video is loaded */
         }
         table, th, td {
             border: 1px solid #ddd;
@@ -133,8 +157,9 @@
         tbody tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        /* Send Reflections Button Styles */
         #send-reflections {
-            display: none;  /* Initially hidden until login */
+            display: none;  /* Initially hidden until video is loaded */
             margin: 20px auto;
             padding: 12px 25px;
             background-color: #FF5722;
@@ -147,22 +172,6 @@
         }
         #send-reflections:hover {
             background-color: #E64A19;
-        }
-        /* Star Rating Styles */
-        .star-rating {
-            display: none;  /* Initially hidden until login */
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .star {
-            font-size: 24px;
-            color: #ccc;
-            cursor: pointer;
-            margin: 0 5px;
-            transition: color 0.3s ease;
-        }
-        .star.selected {
-            color: orange;
         }
     </style>
 </head>
@@ -198,7 +207,7 @@
     <button id="add-reflection">Add Reflection</button>
 
     <!-- Tag Selection and Input Field -->
-    <div id="tag-container" style="display: none;">
+    <div id="tag-container">
         <label for="tag-select">Select Tag:</label>
         <select id="tag-select">
             <option value="">Select an existing tag</option>
@@ -233,9 +242,7 @@
     <!-- Send Reflections Button -->
     <button id="send-reflections">Send Reflections to API</button>
 
-    <!-- Include the YouTube IFrame API script -->
-    <script src="https://www.youtube.com/iframe_api"></script>
-
+    <!-- The YouTube IFrame API script will be loaded dynamically in index.js -->
     <script src="index.js"></script>
 
 </body>
