@@ -1,1 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube Video Annotator</title>
+    <style>
+        /* [Styles remain the same as before] */
+        /* For brevity, styles are omitted in this snippet */
+    </style>
+</head>
+<body>
+
+    <h1>YouTube Video Annotator</h1>
+
+    <!-- Login Form -->
+    <div id="login-form">
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+
+        <button id="login-button">Login</button>
+    </div>
+
+    <!-- Video URL Input -->
+    <div id="video-url-container" style="display: none; text-align: center; margin-bottom: 20px;">
+        <label for="video-url">Enter YouTube Video URL:</label>
+        <input type="text" id="video-url" placeholder="https://www.youtube.com/watch?v=VIDEO_ID" style="width: 80%;">
+        <button id="load-video-button">Load Video</button>
+    </div>
+
+    <!-- Video and Timeline Container -->
+    <div id="video-container">
+        <div id="youtube-video"></div>
+        <div id="timeline-container"></div>
+    </div>
+
+    <!-- Add Reflection Button -->
+    <button id="add-reflection">Add Reflection</button>
+
+    <!-- Tag Selection and Input Field -->
+    <div id="tag-container">
+        <label for="tag-select">Select Tag:</label>
+        <select id="tag-select">
+            <option value="">Select an existing tag</option>
+        </select>
+
+        <label for="tag">Or Add New Tag:</label>
+        <input type="text" id="tag" placeholder="Enter new tag for this video">
+    </div>
+
+    <!-- Star Rating -->
+    <div class="star-rating">
+        <span class="star" data-value="1">&#9733;</span>
+        <span class="star" data-value="2">&#9733;</span>
+        <span class="star" data-value="3">&#9733;</span>
+        <span class="star" data-value="4">&#9733;</span>
+        <span class="star" data-value="5">&#9733;</span>
+    </div>
+
+    <h2>Reflections</h2>
+
+    <!-- Reflections Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Reflection</th>
+            </tr>
+        </thead>
+        <tbody id="reflection-table"></tbody>
+    </table>
+
+    <!-- Send Reflections Button -->
+    <button id="send-reflections">Send Reflections to API</button>
+
+    <!-- Include the JavaScript file -->
+    <script src="index.js"></script>
+
+</body>
+</html>
 
