@@ -151,6 +151,90 @@ function loadTags(authToken) {
     });
 }
 
+// Fetch existing reflections for the video
+function fetchReflectionsForVideo(videoId) {
+    if (!token) {
+        console.error("User is not authenticated.");
+        return;
+    }
+
+    if (!videoId) {
+        console.error("videoId is not set. Cannot fetch reflections.");
+        return;
+    }
+
+    fetch(`http://127.0.0.1:8000/api/resources?videoId=${videoId}`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else if (response.status === 404) {
+            console.log("No reflections found for this video.");
+            return null;
+        } else {
+            // Handle other errors
+            return response.json().then(errorData => {
+                throw new Error(errorData.message || "Failed to fetch reflections.");
+            });
+        }
+    })
+    .then(data => {
+        if (data) {
+            displayReflections(data);
+        }
+    })
+    .catch(error => {
+        console.error("Error fetching reflections:", error);
+        alert(`Failed to fetch reflections: ${error.message}`);
+    });
+}
+
+// Display reflections
+function displayReflections(data) {
+    if (data && data.reflection) {
+        // Clear existing reflections
+        reflections = [];
+        document.getElementById('reflection-table').innerHTML = '';
+        document.getElementById('timeline-container').innerHTML = '';
+
+        // Set current rating and tag if available
+        if (data.rating) {
+            currentRating = data.rating;
+            updateStarDisplay(currentRating);
+        }
+
+        if (data.tag) {
+            document.getElementById('tag-select').value = data.tag;
+        }
+
+        // Parse and display reflections
+        const fetchedReflections = JSON.parse(data.reflection);
+        fetchedReflections.forEach(reflection => {
+            reflections.push(reflection);
+            addReflectionToTableAndTimeline(reflection.time, reflection.text);
+        });
+
+        console.log("Reflections loaded from API.");
+    } else {
+        console.log("No reflections found for this video.");
+    }
+}
+
+// Add reflection to table and timeline
+function addReflectionToTableAndTimeline(time, text) {
+    const reflectionTable = document.getElementById('reflection-table');
+    const newRow = reflectionTable.insertRow();
+    newRow.insertCell(0).innerText = `${parseFloat(time).toFixed(2)}s`;
+    newRow.insertCell(1).innerText = text;
+
+    addBalloonToTimeline(parseFloat(time), text);
+}
+
 // Add reflection at the current video time
 function addReflection() {
     if (!player || !playerReady || typeof player.getCurrentTime !== 'function') {
@@ -163,14 +247,9 @@ function addReflection() {
     const reflection = prompt("Enter your reflection:");
 
     if (reflection) {
-        reflections.push({ time: currentTime.toFixed(2), text: reflection });
-
-        const reflectionTable = document.getElementById('reflection-table');
-        const newRow = reflectionTable.insertRow();
-        newRow.insertCell(0).innerText = `${currentTime.toFixed(2)}s`;
-        newRow.insertCell(1).innerText = reflection;
-
-        addBalloonToTimeline(currentTime, reflection);
+        const reflectionData = { time: currentTime.toFixed(2), text: reflection };
+        reflections.push(reflectionData);
+        addReflectionToTableAndTimeline(currentTime, reflection);
     }
 }
 
@@ -220,9 +299,8 @@ function sendReflections() {
     }
 
     const payload = {
-        videoUrl: videoUrl, // Include the full YouTube URL
-        videoId: videoId,   // Include the video ID
-        reflections: JSON.stringify(reflections), // Use 'reflections' as the field name
+        text: videoUrl, // Include the full YouTube URL as 'text'
+        reflection: JSON.stringify(reflections), // Use 'reflection' as the field name
         tag: tag,
         rating: currentRating
     };
