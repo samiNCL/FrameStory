@@ -1,4 +1,3 @@
-
 // index.js
 
 let player;
@@ -21,52 +20,98 @@ function getQueryParams() {
     return params;
 }
 
-// Handle videoId from URL after login
-function handleVideoIdFromURL() {
-    const queryParams = getQueryParams();
-    if (queryParams.videoId) {
-        videoId = queryParams.videoId;
-        videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        // Set the video URL input value
-        document.getElementById('video-url').value = videoUrl;
-        // Show the video URL input
-        document.getElementById('video-url-container').style.display = 'block';
-    } else {
-        // Show the video URL input
-        document.getElementById('video-url-container').style.display = 'block';
+// Function to parse query parameters
+function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
+
+// Function to validate YouTube Video ID
+function isValidVideoId(videoId) {
+    const regex = /^[a-zA-Z0-9_-]{11}$/;
+    return regex.test(videoId);
+}
+
+// Function to normalize YouTube URLs for consistent comparison
+function normalizeYouTubeUrl(url) {
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname.includes('youtube.com') && urlObj.searchParams.get('v')) {
+            return `https://www.youtube.com/watch?v=${urlObj.searchParams.get('v')}`;
+        } else if (urlObj.hostname === 'youtu.be') {
+            return `https://www.youtube.com/watch?v=${urlObj.pathname.slice(1)}`;
+        } else {
+            return url;
+        }
+    } catch (error) {
+        console.error("Error normalizing YouTube URL:", error);
+        return url;
     }
 }
 
-// Load YouTube API and initialize the player
-function loadYouTubeAPI() {
-    if (window.YT && YT.Player) {
-        console.log("YouTube IFrame API already loaded.");
-        onYouTubeIframeAPIReady();
-    } else {
-        console.log("Loading YouTube IFrame API script.");
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+// Function to extract YouTube video ID from URL
+function getYouTubeVideoId(url) {
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname === 'youtu.be') {
+            // Shortened URL
+            return urlObj.pathname.slice(1);
+        } else if (urlObj.hostname.includes('youtube.com')) {
+            if (urlObj.searchParams.get('v')) {
+                // Standard URL with 'v' parameter
+                return urlObj.searchParams.get('v');
+            } else if (urlObj.pathname.startsWith('/embed/')) {
+                // Embed URL
+                return urlObj.pathname.split('/embed/')[1];
+            }
+        }
+    } catch (error) {
+        console.error("Error parsing YouTube URL:", error);
     }
+    return null;
 }
 
-// YouTube IFrame API ready callback
+// Notification Function
+function showNotification(message, type) {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.className = ''; // Reset classes
+    notification.classList.add(type === 'error' ? 'error' : 'success');
+    notification.style.display = 'block';
+
+    // Hide after 5 seconds
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 5000);
+}
+
+// Function to load the video using YouTube IFrame API
+function loadVideo(videoId) {
+    const spinner = document.getElementById('spinner');
+    spinner.style.display = 'block'; // Show spinner
+
+    if (player && typeof player.loadVideoById === 'function') {
+        player.loadVideoById(videoId);
+    } else {
+        const iframe = document.getElementById('youtube-video');
+        iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
+    }
+
+    // Hide spinner after a short delay (e.g., 3 seconds)
+    setTimeout(() => {
+        spinner.style.display = 'none';
+    }, 3000);
+}
+
+// Function to initialize the YouTube Player
 function onYouTubeIframeAPIReady() {
-    console.log("YouTube IFrame API is ready.");
-    if (!videoId) {
-        console.error("videoId is not set. Cannot initialize player.");
-        return;
-    }
     player = new YT.Player('youtube-video', {
         height: '450',
         width: '800',
         videoId: videoId,
         events: {
             'onReady': onPlayerReady,
-            'onError': function(event) {
-                console.error("YouTube Player Error:", event.data);
-            }
+            'onError': onPlayerError
         }
     });
 }
@@ -89,42 +134,44 @@ function onPlayerReady(event) {
     fetchReflectionsForVideo(videoUrl); // Pass the full video URL
 }
 
-// Extract YouTube video ID from URL
-function getYouTubeVideoId(url) {
-    try {
-        const urlObj = new URL(url);
-        if (urlObj.hostname === 'youtu.be') {
-            // Shortened URL
-            return urlObj.pathname.slice(1);
-        } else if (urlObj.hostname.includes('youtube.com')) {
-            if (urlObj.searchParams.get('v')) {
-                // Standard URL with 'v' parameter
-                return urlObj.searchParams.get('v');
-            } else if (urlObj.pathname.startsWith('/embed/')) {
-                // Embed URL
-                return urlObj.pathname.split('/embed/')[1];
-            }
-        }
-    } catch (error) {
-        console.error("Error parsing YouTube URL:", error);
-    }
-    return null;
+// YouTube Player Error Event
+function onPlayerError(event) {
+    console.error("Error loading the YouTube video:", event.data);
+    showNotification('Failed to load the YouTube video. Please check the Video ID.', 'error');
+    const spinner = document.getElementById('spinner');
+    spinner.style.display = 'none'; // Hide spinner on error
 }
 
-// Normalize YouTube URLs for consistent comparison
-function normalizeYouTubeUrl(url) {
-    try {
-        const urlObj = new URL(url);
-        if (urlObj.hostname.includes('youtube.com') && urlObj.searchParams.get('v')) {
-            return `https://www.youtube.com/watch?v=${urlObj.searchParams.get('v')}`;
-        } else if (urlObj.hostname === 'youtu.be') {
-            return `https://www.youtube.com/watch?v=${urlObj.pathname.slice(1)}`;
+// Handle videoId from URL after login
+function handleVideoIdFromURL() {
+    const queryParams = getQueryParams();
+    if (queryParams.videoId) {
+        const extractedVideoId = queryParams.videoId;
+        if (isValidVideoId(extractedVideoId)) {
+            videoId = extractedVideoId;
+            videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+            // Set the video URL input value
+            document.getElementById('video-url').value = videoUrl;
+            // Automatically load the video
+            loadVideo(videoId);
+            showNotification('Video loaded successfully!', 'success');
         } else {
-            return url;
+            showNotification('Invalid Video ID in URL.', 'error');
         }
-    } catch (error) {
-        console.error("Error normalizing YouTube URL:", error);
-        return url;
+    }
+}
+
+// Load YouTube API and initialize the player
+function loadYouTubeAPI() {
+    if (window.YT && YT.Player) {
+        console.log("YouTube IFrame API already loaded.");
+        onYouTubeIframeAPIReady();
+    } else {
+        console.log("Loading YouTube IFrame API script.");
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     }
 }
 
@@ -497,7 +544,7 @@ document.getElementById('send-reflections').addEventListener('click', sendReflec
 document.getElementById('load-video-button').addEventListener('click', () => {
     videoUrl = document.getElementById('video-url').value.trim(); // Store the full YouTube URL
     videoId = getYouTubeVideoId(videoUrl);
-    if (videoId) {
+    if (videoId && isValidVideoId(videoId)) {
         console.log("Video ID set to:", videoId);
         loadYouTubeAPI();  // Load the YouTube API script and initialize the player
         // Hide the video URL input after loading the video
