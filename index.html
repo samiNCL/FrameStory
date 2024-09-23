@@ -4,8 +4,175 @@
     <meta charset="UTF-8">
     <title>YouTube Video Annotator</title>
     <style>
-        /* [Styles remain the same as before] */
-        /* For brevity, styles are omitted in this snippet */
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        /* Login Form Styles */
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        label, input, select {
+            margin-bottom: 10px;
+            font-size: 16px;
+            padding: 5px;
+            width: 100%;
+            max-width: 300px;
+        }
+        /* Button Styles */
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        /* Video Container Styles */
+        #video-container {
+            position: relative;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: none;  /* Initially hidden until video is loaded */
+            justify-content: center;
+        }
+        #youtube-video {
+            width: 100%;
+            max-width: 800px;
+            height: 450px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #timeline-container {
+            position: absolute;
+            width: 100%;
+            bottom: -30px;
+            left: 0;
+            height: 30px;
+        }
+        .timeline-label {
+            position: absolute;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+        }
+        .timeline-label:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        /* Reflection Button Styles */
+        #add-reflection {
+            display: none;  /* Initially hidden until video is loaded */
+            margin: 0 auto;
+            margin-bottom: 20px;
+            padding: 12px 25px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #add-reflection:hover {
+            background-color: #45a049;
+        }
+        /* Tag and Rating Styles */
+        #tag-container {
+            display: none;  /* Initially hidden until video is loaded */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .star-rating {
+            display: none;  /* Initially hidden until video is loaded */
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .star {
+            font-size: 24px;
+            color: #ccc;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: color 0.3s ease;
+        }
+        .star.selected {
+            color: orange;
+        }
+        /* Reflections Table Styles */
+        h2 {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 24px;
+            color: #333;
+            display: none;  /* Initially hidden until video is loaded */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            display: none;  /* Initially hidden until video is loaded */
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+        }
+        td {
+            padding: 10px;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        /* Send Reflections Button Styles */
+        #send-reflections {
+            display: none;  /* Initially hidden until video is loaded */
+            margin: 20px auto;
+            padding: 12px 25px;
+            background-color: #FF5722;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #send-reflections:hover {
+            background-color: #E64A19;
+        }
     </style>
 </head>
 <body>
@@ -75,9 +242,8 @@
     <!-- Send Reflections Button -->
     <button id="send-reflections">Send Reflections to API</button>
 
-    <!-- Include the JavaScript file -->
+    <!-- The YouTube IFrame API script will be loaded dynamically in index.js -->
     <script src="index.js"></script>
 
 </body>
 </html>
-
