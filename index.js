@@ -20,7 +20,7 @@ function getQueryParams() {
     return params;
 }
 
-// Function to parse query parameters
+// Function to parse a single query parameter
 function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
@@ -75,8 +75,7 @@ function getYouTubeVideoId(url) {
 function showNotification(message, type) {
     const notification = document.getElementById('notification');
     notification.textContent = message;
-    notification.className = ''; // Reset classes
-    notification.classList.add(type === 'error' ? 'error' : 'success');
+    notification.style.backgroundColor = type === 'error' ? '#f44336' : '#4CAF50'; // Red for errors, Green for success
     notification.style.display = 'block';
 
     // Hide after 5 seconds
@@ -89,11 +88,13 @@ function showNotification(message, type) {
 function loadVideo(videoId) {
     const spinner = document.getElementById('spinner');
     spinner.style.display = 'block'; // Show spinner
+    showNotification('Loading video...', 'success');
 
     if (player && typeof player.loadVideoById === 'function') {
         player.loadVideoById(videoId);
     } else {
         const iframe = document.getElementById('youtube-video');
+        iframe.innerHTML = ''; // Clear previous iframe if any
         iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
 
@@ -105,6 +106,11 @@ function loadVideo(videoId) {
 
 // Function to initialize the YouTube Player
 function onYouTubeIframeAPIReady() {
+    console.log("YouTube IFrame API is ready.");
+    if (!videoId) {
+        console.error("videoId is not set. Cannot initialize player.");
+        return;
+    }
     player = new YT.Player('youtube-video', {
         height: '450',
         width: '800',
@@ -130,6 +136,11 @@ function onPlayerReady(event) {
     document.querySelector('table').style.display = 'table';
     document.getElementById('send-reflections').style.display = 'block';
 
+    // Hide spinner and show success notification
+    const spinner = document.getElementById('spinner');
+    spinner.style.display = 'none';
+    showNotification('Video loaded successfully!', 'success');
+
     // Fetch existing reflections for this video AFTER videoId is set and player is ready
     fetchReflectionsForVideo(videoUrl); // Pass the full video URL
 }
@@ -153,11 +164,15 @@ function handleVideoIdFromURL() {
             // Set the video URL input value
             document.getElementById('video-url').value = videoUrl;
             // Automatically load the video
-            loadVideo(videoId);
-            showNotification('Video loaded successfully!', 'success');
+            loadYouTubeAPI();
+            // Optionally, you can hide the video URL input container after loading
+            // document.getElementById('video-url-container').style.display = 'none';
         } else {
             showNotification('Invalid Video ID in URL.', 'error');
         }
+    } else {
+        // Show the video URL input if no videoId is present in the URL
+        document.getElementById('video-url-container').style.display = 'block';
     }
 }
 
@@ -187,7 +202,7 @@ function login(email, password) {
         if (data.access_token) {
             token = data.access_token;
             localStorage.setItem('authToken', token);
-            alert("Login successful!");
+            showNotification("Login successful!", "success");
             loadTags(token);
 
             // Hide the login form
@@ -196,12 +211,12 @@ function login(email, password) {
             // Handle videoId from URL
             handleVideoIdFromURL();
         } else {
-            alert("Login failed. Please check your credentials.");
+            showNotification("Login failed. Please check your credentials.", "error");
         }
     })
     .catch(error => {
         console.error("Login error:", error);
-        alert("An error occurred during login.");
+        showNotification("An error occurred during login.", "error");
     });
 }
 
@@ -274,7 +289,7 @@ function fetchReflectionsForVideo(videoUrl) {
     })
     .catch(error => {
         console.error("Error fetching reflections:", error);
-        alert(`Failed to fetch reflections: ${error.message}`);
+        showNotification(`Failed to fetch reflections: ${error.message}`, "error");
     });
 }
 
@@ -317,7 +332,7 @@ function displayReflections(data) {
                     console.log("Parsed reflections data:", fetchedReflections);
                 } catch (error) {
                     console.error("Error parsing reflections:", error);
-                    alert("Failed to parse reflections data.");
+                    showNotification("Failed to parse reflections data.", "error");
                     return;
                 }
 
@@ -338,7 +353,7 @@ function displayReflections(data) {
                     console.log("Reflections loaded from API.");
                 } else {
                     console.error("Reflections data is not an array:", fetchedReflections);
-                    alert("Reflections data is invalid.");
+                    showNotification("Reflections data is invalid.", "error");
                 }
             } else {
                 console.log("No reflections found for this video.");
@@ -360,7 +375,7 @@ function displayReflections(data) {
 
             // Inform user if multiple resources were found
             if (matchingResources.length > 1) {
-                alert(`Multiple entries found for this video. Displaying the latest reflections.`);
+                showNotification(`Multiple entries found for this video. Displaying the latest reflections.`, "success");
             }
 
         } else {
@@ -478,7 +493,7 @@ function sendReflections() {
     })
     .then(data => {
         if (data.id) {
-            alert("Reflections sent successfully!");
+            showNotification("Reflections sent successfully!", "success");
             // Clear reflections and reset form
             reflections = [];
             document.getElementById('reflection-table').innerHTML = '';
@@ -487,12 +502,12 @@ function sendReflections() {
             document.getElementById('tag-select').value = '';
             resetRatingStars();
         } else {
-            alert("Failed to save reflections.");
+            showNotification("Failed to save reflections.", "error");
         }
     })
     .catch(error => {
         console.error("Error sending reflections:", error);
-        alert(`Failed to send reflections: ${error.message}`);
+        showNotification(`Failed to send reflections: ${error.message}`, "error");
     });
 }
 
@@ -533,7 +548,7 @@ document.getElementById('login-button').addEventListener('click', () => {
     if (email && password) {
         login(email, password);
     } else {
-        alert("Please enter both email and password.");
+        showNotification("Please enter both email and password.", "error");
     }
 });
 
@@ -550,7 +565,7 @@ document.getElementById('load-video-button').addEventListener('click', () => {
         // Hide the video URL input after loading the video
         document.getElementById('video-url-container').style.display = 'none';
     } else {
-        alert("Invalid YouTube video URL. Please try again.");
+        showNotification("Invalid YouTube video URL. Please try again.", "error");
     }
 });
 
