@@ -1,3 +1,4 @@
+
 // index.js
 
 let player;
@@ -20,36 +21,75 @@ function getQueryParams() {
     return params;
 }
 
-// Function to parse a single query parameter
-function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-}
-
-// Function to validate YouTube Video ID
-function isValidVideoId(videoId) {
-    const regex = /^[a-zA-Z0-9_-]{11}$/;
-    return regex.test(videoId);
-}
-
-// Function to normalize YouTube URLs for consistent comparison
-function normalizeYouTubeUrl(url) {
-    try {
-        const urlObj = new URL(url);
-        if (urlObj.hostname.includes('youtube.com') && urlObj.searchParams.get('v')) {
-            return `https://www.youtube.com/watch?v=${urlObj.searchParams.get('v')}`;
-        } else if (urlObj.hostname === 'youtu.be') {
-            return `https://www.youtube.com/watch?v=${urlObj.pathname.slice(1)}`;
-        } else {
-            return url;
-        }
-    } catch (error) {
-        console.error("Error normalizing YouTube URL:", error);
-        return url;
+// Handle videoId from URL after login
+function handleVideoIdFromURL() {
+    const queryParams = getQueryParams();
+    if (queryParams.videoId) {
+        videoId = queryParams.videoId;
+        videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        // Set the video URL input value
+        document.getElementById('video-url').value = videoUrl;
+        // Show the video URL input
+        document.getElementById('video-url-container').style.display = 'block';
+    } else {
+        // Show the video URL input
+        document.getElementById('video-url-container').style.display = 'block';
     }
 }
 
-// Function to extract YouTube video ID from URL
+// Load YouTube API and initialize the player
+function loadYouTubeAPI() {
+    if (window.YT && YT.Player) {
+        console.log("YouTube IFrame API already loaded.");
+        onYouTubeIframeAPIReady();
+    } else {
+        console.log("Loading YouTube IFrame API script.");
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+}
+
+// YouTube IFrame API ready callback
+function onYouTubeIframeAPIReady() {
+    console.log("YouTube IFrame API is ready.");
+    if (!videoId) {
+        console.error("videoId is not set. Cannot initialize player.");
+        return;
+    }
+    player = new YT.Player('youtube-video', {
+        height: '450',
+        width: '800',
+        videoId: videoId,
+        events: {
+            'onReady': onPlayerReady,
+            'onError': function(event) {
+                console.error("YouTube Player Error:", event.data);
+            }
+        }
+    });
+}
+window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady; // Ensure global scope
+
+// Player ready callback
+function onPlayerReady(event) {
+    playerReady = true;
+    console.log("Player is ready.");
+    // Display UI elements
+    document.getElementById('video-container').style.display = 'flex';
+    document.getElementById('add-reflection').style.display = 'block';
+    document.getElementById('tag-container').style.display = 'block';
+    document.querySelector('.star-rating').style.display = 'flex';
+    document.querySelector('h2').style.display = 'block';
+    document.querySelector('table').style.display = 'table';
+    document.getElementById('send-reflections').style.display = 'block';
+
+    // Fetch existing reflections for this video AFTER videoId is set and player is ready
+    fetchReflectionsForVideo(videoUrl); // Pass the full video URL
+}
+
+// Extract YouTube video ID from URL
 function getYouTubeVideoId(url) {
     try {
         const urlObj = new URL(url);
@@ -71,122 +111,20 @@ function getYouTubeVideoId(url) {
     return null;
 }
 
-// Notification Function
-function showNotification(message, type) {
-    const notification = document.getElementById('notification');
-    notification.textContent = message;
-    notification.style.backgroundColor = type === 'error' ? '#f44336' : '#4CAF50'; // Red for errors, Green for success
-    notification.style.display = 'block';
-
-    // Hide after 5 seconds
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 5000);
-}
-
-// Function to load the video using YouTube IFrame API
-function loadVideo(videoId) {
-    const spinner = document.getElementById('spinner');
-    spinner.style.display = 'block'; // Show spinner
-    showNotification('Loading video...', 'success');
-
-    if (player && typeof player.loadVideoById === 'function') {
-        player.loadVideoById(videoId);
-    } else {
-        const iframe = document.getElementById('youtube-video');
-        iframe.innerHTML = ''; // Clear previous iframe if any
-        iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
-    }
-
-    // Hide spinner after a short delay (e.g., 3 seconds)
-    setTimeout(() => {
-        spinner.style.display = 'none';
-    }, 3000);
-}
-
-// Function to initialize the YouTube Player
-function onYouTubeIframeAPIReady() {
-    console.log("YouTube IFrame API is ready.");
-    if (!videoId) {
-        console.error("videoId is not set. Cannot initialize player.");
-        return;
-    }
-    player = new YT.Player('youtube-video', {
-        height: '450',
-        width: '800',
-        videoId: videoId,
-        events: {
-            'onReady': onPlayerReady,
-            'onError': onPlayerError
-        }
-    });
-}
-window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady; // Ensure global scope
-
-// Player ready callback
-function onPlayerReady(event) {
-    playerReady = true;
-    console.log("Player is ready.");
-    // Display UI elements
-    document.getElementById('video-container').style.display = 'flex';
-    document.getElementById('add-reflection').style.display = 'block';
-    document.getElementById('tag-container').style.display = 'block';
-    document.querySelector('.star-rating').style.display = 'flex';
-    document.querySelector('h2').style.display = 'block';
-    document.querySelector('table').style.display = 'table';
-    document.getElementById('send-reflections').style.display = 'block';
-
-    // Hide spinner and show success notification
-    const spinner = document.getElementById('spinner');
-    spinner.style.display = 'none';
-    showNotification('Video loaded successfully!', 'success');
-
-    // Fetch existing reflections for this video AFTER videoId is set and player is ready
-    fetchReflectionsForVideo(videoUrl); // Pass the full video URL
-}
-
-// YouTube Player Error Event
-function onPlayerError(event) {
-    console.error("Error loading the YouTube video:", event.data);
-    showNotification('Failed to load the YouTube video. Please check the Video ID.', 'error');
-    const spinner = document.getElementById('spinner');
-    spinner.style.display = 'none'; // Hide spinner on error
-}
-
-// Handle videoId from URL after login
-function handleVideoIdFromURL() {
-    const queryParams = getQueryParams();
-    if (queryParams.videoId) {
-        const extractedVideoId = queryParams.videoId;
-        if (isValidVideoId(extractedVideoId)) {
-            videoId = extractedVideoId;
-            videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-            // Set the video URL input value
-            document.getElementById('video-url').value = videoUrl;
-            // Automatically load the video
-            loadYouTubeAPI();
-            // Optionally, you can hide the video URL input container after loading
-            // document.getElementById('video-url-container').style.display = 'none';
+// Normalize YouTube URLs for consistent comparison
+function normalizeYouTubeUrl(url) {
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname.includes('youtube.com') && urlObj.searchParams.get('v')) {
+            return `https://www.youtube.com/watch?v=${urlObj.searchParams.get('v')}`;
+        } else if (urlObj.hostname === 'youtu.be') {
+            return `https://www.youtube.com/watch?v=${urlObj.pathname.slice(1)}`;
         } else {
-            showNotification('Invalid Video ID in URL.', 'error');
+            return url;
         }
-    } else {
-        // Show the video URL input if no videoId is present in the URL
-        document.getElementById('video-url-container').style.display = 'block';
-    }
-}
-
-// Load YouTube API and initialize the player
-function loadYouTubeAPI() {
-    if (window.YT && YT.Player) {
-        console.log("YouTube IFrame API already loaded.");
-        onYouTubeIframeAPIReady();
-    } else {
-        console.log("Loading YouTube IFrame API script.");
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    } catch (error) {
+        console.error("Error normalizing YouTube URL:", error);
+        return url;
     }
 }
 
@@ -202,7 +140,7 @@ function login(email, password) {
         if (data.access_token) {
             token = data.access_token;
             localStorage.setItem('authToken', token);
-            showNotification("Login successful!", "success");
+            alert("Login successful!");
             loadTags(token);
 
             // Hide the login form
@@ -211,12 +149,12 @@ function login(email, password) {
             // Handle videoId from URL
             handleVideoIdFromURL();
         } else {
-            showNotification("Login failed. Please check your credentials.", "error");
+            alert("Login failed. Please check your credentials.");
         }
     })
     .catch(error => {
         console.error("Login error:", error);
-        showNotification("An error occurred during login.", "error");
+        alert("An error occurred during login.");
     });
 }
 
@@ -289,7 +227,7 @@ function fetchReflectionsForVideo(videoUrl) {
     })
     .catch(error => {
         console.error("Error fetching reflections:", error);
-        showNotification(`Failed to fetch reflections: ${error.message}`, "error");
+        alert(`Failed to fetch reflections: ${error.message}`);
     });
 }
 
@@ -332,7 +270,7 @@ function displayReflections(data) {
                     console.log("Parsed reflections data:", fetchedReflections);
                 } catch (error) {
                     console.error("Error parsing reflections:", error);
-                    showNotification("Failed to parse reflections data.", "error");
+                    alert("Failed to parse reflections data.");
                     return;
                 }
 
@@ -353,7 +291,7 @@ function displayReflections(data) {
                     console.log("Reflections loaded from API.");
                 } else {
                     console.error("Reflections data is not an array:", fetchedReflections);
-                    showNotification("Reflections data is invalid.", "error");
+                    alert("Reflections data is invalid.");
                 }
             } else {
                 console.log("No reflections found for this video.");
@@ -375,7 +313,7 @@ function displayReflections(data) {
 
             // Inform user if multiple resources were found
             if (matchingResources.length > 1) {
-                showNotification(`Multiple entries found for this video. Displaying the latest reflections.`, "success");
+                alert(`Multiple entries found for this video. Displaying the latest reflections.`);
             }
 
         } else {
@@ -493,7 +431,7 @@ function sendReflections() {
     })
     .then(data => {
         if (data.id) {
-            showNotification("Reflections sent successfully!", "success");
+            alert("Reflections sent successfully!");
             // Clear reflections and reset form
             reflections = [];
             document.getElementById('reflection-table').innerHTML = '';
@@ -502,12 +440,12 @@ function sendReflections() {
             document.getElementById('tag-select').value = '';
             resetRatingStars();
         } else {
-            showNotification("Failed to save reflections.", "error");
+            alert("Failed to save reflections.");
         }
     })
     .catch(error => {
         console.error("Error sending reflections:", error);
-        showNotification(`Failed to send reflections: ${error.message}`, "error");
+        alert(`Failed to send reflections: ${error.message}`);
     });
 }
 
@@ -548,7 +486,7 @@ document.getElementById('login-button').addEventListener('click', () => {
     if (email && password) {
         login(email, password);
     } else {
-        showNotification("Please enter both email and password.", "error");
+        alert("Please enter both email and password.");
     }
 });
 
@@ -559,13 +497,13 @@ document.getElementById('send-reflections').addEventListener('click', sendReflec
 document.getElementById('load-video-button').addEventListener('click', () => {
     videoUrl = document.getElementById('video-url').value.trim(); // Store the full YouTube URL
     videoId = getYouTubeVideoId(videoUrl);
-    if (videoId && isValidVideoId(videoId)) {
+    if (videoId) {
         console.log("Video ID set to:", videoId);
         loadYouTubeAPI();  // Load the YouTube API script and initialize the player
         // Hide the video URL input after loading the video
         document.getElementById('video-url-container').style.display = 'none';
     } else {
-        showNotification("Invalid YouTube video URL. Please try again.", "error");
+        alert("Invalid YouTube video URL. Please try again.");
     }
 });
 
