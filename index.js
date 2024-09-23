@@ -236,18 +236,24 @@ function displayReflections(data) {
         // Normalize the current video URL
         const currentUrl = normalizeYouTubeUrl(videoUrl);
 
-        // Find the resource that matches the current video URL
-        const matchingResource = data.resources.find(resource => {
+        // Find all resources that match the current video URL
+        const matchingResources = data.resources.filter(resource => {
             const resourceUrl = normalizeYouTubeUrl(resource.text);
-            console.log(`Comparing resource URL: ${resourceUrl} with current URL: ${currentUrl}`);
             return resourceUrl === currentUrl;
         });
 
-        if (matchingResource) {
-            console.log("Matching resource found:", matchingResource);
+        if (matchingResources.length > 0) {
+            console.log(`Found ${matchingResources.length} matching resources.`);
 
-            // Extract reflections, rating, and tag from the matching resource
-            const { reflection, rating, tag_title } = matchingResource;
+            // Sort the matching resources by 'updated_at' in descending order
+            matchingResources.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+            // Select the latest resource
+            const latestResource = matchingResources[0];
+            console.log("Latest resource selected:", latestResource);
+
+            // Extract reflections, rating, and tag from the latest resource
+            const { reflection, rating, tag_title } = latestResource;
             const tag = tag_title; // Adjust field name if necessary
 
             if (reflection) {
@@ -304,8 +310,17 @@ function displayReflections(data) {
                 document.getElementById('tag-select').value = tag;
             }
 
+            // Inform user if multiple resources were found
+            if (matchingResources.length > 1) {
+                alert(`Multiple entries found for this video. Displaying the latest reflections.`);
+            }
+
         } else {
             console.log("No matching resource found for this video.");
+            // Handle case where no resources match
+            reflections = [];
+            document.getElementById('reflection-table').innerHTML = '';
+            document.getElementById('timeline-container').innerHTML = '';
         }
     } else {
         console.log("No resources found in data.");
@@ -365,7 +380,7 @@ function addBalloonToTimeline(time, text) {
 // Send reflections to the backend
 function sendReflections() {
     const tagSelect = document.getElementById('tag-select');
-    const newTag = document.getElementById('tag').value;
+    const newTag = document.getElementById('tag').value.trim();
     const selectedTag = tagSelect.value;
 
     const tag = newTag ? newTag : selectedTag;
