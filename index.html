@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -173,42 +174,11 @@
         #send-reflections:hover {
             background-color: #E64A19;
         }
-        /* Notification Styles */
-        #notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #f44336; /* Red */
-            color: white;
-            padding: 15px;
-            border-radius: 5px;
-            display: none;
-            z-index: 1000;
-        }
-        #notification.success {
-            background-color: #4CAF50; /* Green */
-        }
-        #notification.error {
-            background-color: #f44336; /* Red */
-        }
-        /* Spinner Styles */
-        #spinner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 18px;
-            color: #555;
-            display: none;
-        }
     </style>
 </head>
 <body>
 
     <h1>YouTube Video Annotator</h1>
-
-    <!-- Notification Container -->
-    <div id="notification"></div>
 
     <!-- Login Form -->
     <div id="login-form">
@@ -230,8 +200,7 @@
 
     <!-- Video and Timeline Container -->
     <div id="video-container">
-        <iframe id="youtube-video" allowfullscreen></iframe>
-        <div id="spinner">Loading video...</div>
+        <div id="youtube-video"></div>
         <div id="timeline-container"></div>
     </div>
 
