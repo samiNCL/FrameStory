@@ -6,6 +6,7 @@ let token = null;
 let reflections = [];
 let currentRating = 0;
 let videoId = null;
+let videoUrl = null; // Added global variable to store the full YouTube URL
 
 // Load YouTube API and initialize the player
 function loadYouTubeAPI() {
@@ -54,9 +55,6 @@ function onPlayerReady(event) {
     document.querySelector('h2').style.display = 'block';
     document.querySelector('table').style.display = 'table';
     document.getElementById('send-reflections').style.display = 'block';
-
-    // Fetch existing reflections for this video AFTER videoId is set and player is ready
-    fetchReflectionsForVideo(videoId);
 }
 
 // Extract YouTube video ID from URL
@@ -120,70 +118,6 @@ function loadTags(authToken) {
     });
 }
 
-// Fetch existing reflections for the video
-function fetchReflectionsForVideo(videoId) {
-    if (!token) {
-        console.error("User is not authenticated.");
-        return;
-    }
-
-    if (!videoId) {
-        console.error("videoId is not set. Cannot fetch reflections.");
-        return;
-    }
-
-    fetch(`http://127.0.0.1:8000/api/resources?videoId=${videoId}`, {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data && data.reflections) {
-            // Clear existing reflections
-            reflections = [];
-            document.getElementById('reflection-table').innerHTML = '';
-            document.getElementById('timeline-container').innerHTML = '';
-
-            // Set current rating and tag if available
-            if (data.rating) {
-                currentRating = data.rating;
-                updateStarDisplay(currentRating);
-            }
-
-            if (data.tag) {
-                document.getElementById('tag-select').value = data.tag;
-            }
-
-            // Parse and display reflections
-            const fetchedReflections = JSON.parse(data.reflections);
-            fetchedReflections.forEach(reflection => {
-                reflections.push(reflection);
-                addReflectionToTableAndTimeline(reflection.time, reflection.text);
-            });
-
-            console.log("Reflections loaded from API.");
-        } else {
-            console.log("No reflections found for this video.");
-        }
-    })
-    .catch(error => {
-        console.error("Error fetching reflections:", error);
-    });
-}
-
-// Add reflection to table and timeline
-function addReflectionToTableAndTimeline(time, text) {
-    const reflectionTable = document.getElementById('reflection-table');
-    const newRow = reflectionTable.insertRow();
-    newRow.insertCell(0).innerText = `${parseFloat(time).toFixed(2)}s`;
-    newRow.insertCell(1).innerText = text;
-
-    addBalloonToTimeline(parseFloat(time), text);
-}
-
 // Add reflection at the current video time
 function addReflection() {
     if (!player || !playerReady || typeof player.getCurrentTime !== 'function') {
@@ -196,9 +130,14 @@ function addReflection() {
     const reflection = prompt("Enter your reflection:");
 
     if (reflection) {
-        const reflectionData = { time: currentTime.toFixed(2), text: reflection };
-        reflections.push(reflectionData);
-        addReflectionToTableAndTimeline(currentTime, reflection);
+        reflections.push({ time: currentTime.toFixed(2), text: reflection });
+
+        const reflectionTable = document.getElementById('reflection-table');
+        const newRow = reflectionTable.insertRow();
+        newRow.insertCell(0).innerText = `${currentTime.toFixed(2)}s`;
+        newRow.insertCell(1).innerText = reflection;
+
+        addBalloonToTimeline(currentTime, reflection);
     }
 }
 
@@ -248,8 +187,8 @@ function sendReflections() {
     }
 
     const payload = {
-        videoId: videoId,
-        reflections: JSON.stringify(reflections),
+        text: videoUrl, // Changed to send the full YouTube URL instead of videoId
+        reflection: JSON.stringify(reflections),
         tag: tag,
         rating: currentRating
     };
@@ -266,14 +205,13 @@ function sendReflections() {
     .then(data => {
         if (data.id) {
             alert("Reflections sent successfully!");
-            // Optionally, clear the reflections and reset the form
-            // Commented out to keep the reflections displayed
-            // reflections = [];
-            // document.getElementById('reflection-table').innerHTML = '';
-            // document.getElementById('timeline-container').innerHTML = '';
-            // document.getElementById('tag').value = '';
-            // document.getElementById('tag-select').value = '';
-            // resetRatingStars();
+            // Clear reflections and reset form
+            reflections = [];
+            document.getElementById('reflection-table').innerHTML = '';
+            document.getElementById('timeline-container').innerHTML = '';
+            document.getElementById('tag').value = '';
+            document.getElementById('tag-select').value = '';
+            resetRatingStars();
         } else {
             alert("Failed to save reflections.");
         }
@@ -326,7 +264,7 @@ document.getElementById('send-reflections').addEventListener('click', sendReflec
 
 // Event listener for loading the video
 document.getElementById('load-video-button').addEventListener('click', () => {
-    const videoUrl = document.getElementById('video-url').value;
+    videoUrl = document.getElementById('video-url').value; // Store the full YouTube URL
     videoId = getYouTubeVideoId(videoUrl);
     if (videoId) {
         console.log("Video ID set to:", videoId);
