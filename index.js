@@ -18,6 +18,12 @@ function getQueryParam(param) {
     return urlParams.get(param);
 }
 
+// Function to validate YouTube Video ID
+function isValidVideoId(videoId) {
+    const regex = /^[a-zA-Z0-9_-]{11}$/;
+    return regex.test(videoId);
+}
+
 // Function to load the video using YouTube IFrame API
 function loadVideo(videoId) {
     const spinner = document.getElementById('spinner');
@@ -36,13 +42,7 @@ function loadVideo(videoId) {
     }, 3000);
 }
 
-// Function to hide the video loader section
-function hideVideoLoader() {
-    const loader = document.getElementById('video-loader');
-    loader.style.display = 'none';
-}
-
-// Initialize the YouTube Player
+// Function to initialize the YouTube Player
 let player;
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('youtube-video', {
@@ -75,21 +75,23 @@ function initializeVideo() {
     const loadButton = document.getElementById('load-button');
 
     if (videoIdFromURL) {
-        // Automatically load the video
-        loadVideo(videoIdFromURL);
-        hideVideoLoader();
-        showNotification('Video loaded successfully!', 'success');
+        if (isValidVideoId(videoIdFromURL)) {
+            // Automatically load the video
+            loadVideo(videoIdFromURL);
+            showNotification('Video loaded successfully!', 'success');
+        } else {
+            showNotification('Invalid Video ID in URL.', 'error');
+        }
     }
 
     // Event listener for the Load Video button
     loadButton.addEventListener('click', function() {
         const videoId = videoIdInput.value.trim();
-        if (videoId) {
+        if (videoId && isValidVideoId(videoId)) {
             loadVideo(videoId);
             // Update the URL with the new videoId without reloading the page
             const newURL = `${window.location.pathname}?videoId=${videoId}`;
             window.history.replaceState({}, '', newURL);
-            hideVideoLoader();
             showNotification('Video loaded successfully!', 'success');
         } else {
             showNotification('Please enter a valid YouTube Video ID.', 'error');
