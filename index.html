@@ -1,128 +1,250 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FrameStory</title>
+    <title>YouTube Video Annotator</title>
     <style>
-        /* Basic Styles */
+        /* General Styles */
         body {
             font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
             background-color: #f4f4f9;
             color: #333;
-            margin: 0;
-            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
             text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-size: 28px;
         }
-        #video-loader {
-            margin: 20px auto;
-            max-width: 400px;
+        /* Login Form Styles */
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
         }
-        #video-input-container input {
-            width: 70%;
-            padding: 10px;
+        label, input, select {
+            margin-bottom: 10px;
             font-size: 16px;
+            padding: 5px;
+            width: 100%;
+            max-width: 300px;
         }
-        #video-input-container button {
+        /* Button Styles */
+        button {
             padding: 10px 20px;
-            font-size: 16px;
-            margin-left: 10px;
-            cursor: pointer;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 5px;
-            transition: background-color 0.3s ease;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
         }
-        #video-input-container button:hover {
+        button:hover {
             background-color: #45a049;
         }
+        /* Video Container Styles */
         #video-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
             position: relative;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: none;  /* Initially hidden until video is loaded */
+            justify-content: center;
         }
         #youtube-video {
             width: 100%;
             max-width: 800px;
             height: 450px;
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        /* Notification Styles */
-        #notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #f44336; /* Red */
-            color: white;
-            padding: 15px;
-            border-radius: 5px;
-            display: none;
-            z-index: 1000;
-        }
-        #notification.success {
-            background-color: #4CAF50; /* Green */
-        }
-        #notification.error {
-            background-color: #f44336; /* Red */
-        }
-        /* Spinner Styles */
-        #spinner {
+        #timeline-container {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 18px;
-            color: #555;
-            display: none;
+            width: 100%;
+            bottom: -30px;
+            left: 0;
+            height: 30px;
         }
-        /* Example of Additional UI Elements */
-        #additional-ui {
+        .timeline-label {
+            position: absolute;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+        }
+        .timeline-label:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        /* Reflection Button Styles */
+        #add-reflection {
+            display: none;  /* Initially hidden until video is loaded */
+            margin: 0 auto;
+            margin-bottom: 20px;
+            padding: 12px 25px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #add-reflection:hover {
+            background-color: #45a049;
+        }
+        /* Tag and Rating Styles */
+        #tag-container {
+            display: none;  /* Initially hidden until video is loaded */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .star-rating {
+            display: none;  /* Initially hidden until video is loaded */
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .star {
+            font-size: 24px;
+            color: #ccc;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: color 0.3s ease;
+        }
+        .star.selected {
+            color: orange;
+        }
+        /* Reflections Table Styles */
+        h2 {
+            text-align: center;
             margin-top: 30px;
+            font-size: 24px;
+            color: #333;
+            display: none;  /* Initially hidden until video is loaded */
         }
-        /* Responsive Design */
-        @media (max-width: 600px) {
-            #youtube-video {
-                width: 100%;
-                height: 250px;
-            }
-            #video-input-container input {
-                width: 60%;
-            }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            display: none;  /* Initially hidden until video is loaded */
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+        }
+        td {
+            padding: 10px;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        /* Send Reflections Button Styles */
+        #send-reflections {
+            display: none;  /* Initially hidden until video is loaded */
+            margin: 20px auto;
+            padding: 12px 25px;
+            background-color: #FF5722;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #send-reflections:hover {
+            background-color: #E64A19;
         }
     </style>
 </head>
 <body>
-    <h1>FrameStory</h1>
 
-    <!-- Notification Container -->
-    <div id="notification"></div>
+    <h1>YouTube Video Annotator</h1>
 
-    <!-- Video Loader Section -->
-    <div id="video-loader">
-        <div id="video-input-container">
-            <input type="text" id="video-id-input" placeholder="Enter YouTube Video ID">
-            <button id="load-button">Load Video</button>
-        </div>
+    <!-- Login Form -->
+    <div id="login-form">
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+
+        <button id="login-button">Login</button>
     </div>
 
-    <!-- Video Container -->
+    <!-- Video URL Input -->
+    <div id="video-url-container" style="display: none; text-align: center; margin-bottom: 20px;">
+        <label for="video-url">Enter YouTube Video URL:</label>
+        <input type="text" id="video-url" placeholder="https://www.youtube.com/watch?v=VIDEO_ID" style="width: 80%;">
+        <button id="load-video-button">Load Video</button>
+    </div>
+
+    <!-- Video and Timeline Container -->
     <div id="video-container">
-        <iframe id="youtube-video" allowfullscreen></iframe>
-        <div id="spinner">Loading video...</div>
+        <div id="youtube-video"></div>
+        <div id="timeline-container"></div>
     </div>
 
-    <!-- Example of Additional UI Elements -->
-    <div id="additional-ui">
-        <!-- Your existing UI components, such as annotations, comments, etc. -->
-        <p>Welcome to FrameStory! Enhance your learning experience with our tools.</p>
-        <!-- Add more elements as needed -->
+    <!-- Add Reflection Button -->
+    <button id="add-reflection">Add Reflection</button>
+
+    <!-- Tag Selection and Input Field -->
+    <div id="tag-container">
+        <label for="tag-select">Select Tag:</label>
+        <select id="tag-select">
+            <option value="">Select an existing tag</option>
+        </select>
+
+        <label for="tag">Or Add New Tag:</label>
+        <input type="text" id="tag" placeholder="Enter new tag for this video">
     </div>
 
-    <!-- YouTube IFrame API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- Star Rating -->
+    <div class="star-rating">
+        <span class="star" data-value="1">&#9733;</span>
+        <span class="star" data-value="2">&#9733;</span>
+        <span class="star" data-value="3">&#9733;</span>
+        <span class="star" data-value="4">&#9733;</span>
+        <span class="star" data-value="5">&#9733;</span>
+    </div>
+
+    <h2>Reflections</h2>
+
+    <!-- Reflections Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Reflection</th>
+            </tr>
+        </thead>
+        <tbody id="reflection-table"></tbody>
+    </table>
+
+    <!-- Send Reflections Button -->
+    <button id="send-reflections">Send Reflections to API</button>
+
+    <!-- The YouTube IFrame API script will be loaded dynamically in index.js -->
     <script src="index.js"></script>
+
 </body>
 </html>
