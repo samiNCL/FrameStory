@@ -28,10 +28,8 @@ function handleVideoIdFromURL() {
         videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
         // Set the video URL input value
         document.getElementById('video-url').value = videoUrl;
-        // Automatically load the video
-        loadYouTubeAPI();
-        // Hide the video URL input after loading the video
-        document.getElementById('video-url-container').style.display = 'none';
+        // Show the video URL input (in case it's hidden)
+        document.getElementById('video-url-container').style.display = 'block';
     } else {
         // Show the video URL input
         document.getElementById('video-url-container').style.display = 'block';
@@ -85,6 +83,9 @@ function onPlayerReady(event) {
     document.querySelector('h2').style.display = 'block';
     document.querySelector('table').style.display = 'table';
     document.getElementById('send-reflections').style.display = 'block';
+
+    // Fetch existing reflections for this video AFTER videoId is set and player is ready
+    fetchReflectionsForVideo(videoId);
 }
 
 // Extract YouTube video ID from URL
@@ -331,6 +332,7 @@ if (storedToken) {
 
     // Handle videoId from URL
     handleVideoIdFromURL();
+} else {
+    // Show login form
+    document.getElementById('login-form').style.display = 'block';
 }
-
-
