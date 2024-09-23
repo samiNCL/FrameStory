@@ -6,7 +6,37 @@ let token = null;
 let reflections = [];
 let currentRating = 0;
 let videoId = null;
-let videoUrl = null; // Added global variable to store the full YouTube URL
+let videoUrl = null; // Global variable to store the full YouTube URL
+
+// Function to get query parameters from URL
+function getQueryParams() {
+    const params = {};
+    window.location.search.substr(1).split('&').forEach(function(item) {
+        if (item) {
+            const parts = item.split('=');
+            params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+        }
+    });
+    return params;
+}
+
+// Function to handle videoId from URL after login
+function handleVideoIdFromURL() {
+    const queryParams = getQueryParams();
+    if (queryParams.videoId) {
+        videoId = queryParams.videoId;
+        videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        // Set the video URL input value
+        document.getElementById('video-url').value = videoUrl;
+        // Automatically load the video
+        loadYouTubeAPI();
+        // Hide the video URL input after loading the video
+        document.getElementById('video-url-container').style.display = 'none';
+    } else {
+        // Show the video URL input
+        document.getElementById('video-url-container').style.display = 'block';
+    }
+}
 
 // Load YouTube API and initialize the player
 function loadYouTubeAPI() {
@@ -79,9 +109,11 @@ function login(email, password) {
             alert("Login successful!");
             loadTags(token);
 
-            // Hide the login form and show the video URL input
+            // Hide the login form
             document.getElementById('login-form').style.display = 'none';
-            document.getElementById('video-url-container').style.display = 'block';
+
+            // Handle videoId from URL
+            handleVideoIdFromURL();
         } else {
             alert("Login failed. Please check your credentials.");
         }
@@ -187,8 +219,9 @@ function sendReflections() {
     }
 
     const payload = {
-        text: videoUrl, // Changed to send the full YouTube URL instead of videoId
-        reflection: JSON.stringify(reflections),
+        videoUrl: videoUrl, // Include the full YouTube URL
+        videoId: videoId,   // Include the video ID
+        reflections: JSON.stringify(reflections), // Use 'reflections' as the field name
         tag: tag,
         rating: currentRating
     };
@@ -201,7 +234,16 @@ function sendReflections() {
         },
         body: JSON.stringify(payload)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            // Handle errors
+            return response.json().then(errorData => {
+                throw new Error(errorData.message || "Failed to save reflections.");
+            });
+        }
+    })
     .then(data => {
         if (data.id) {
             alert("Reflections sent successfully!");
@@ -218,7 +260,7 @@ function sendReflections() {
     })
     .catch(error => {
         console.error("Error sending reflections:", error);
-        alert("Failed to send reflections.");
+        alert(`Failed to send reflections: ${error.message}`);
     });
 }
 
@@ -284,7 +326,11 @@ const storedToken = localStorage.getItem('authToken');
 if (storedToken) {
     token = storedToken;
     loadTags(token);
-    // Hide the login form and show the video URL input
+    // Hide the login form
     document.getElementById('login-form').style.display = 'none';
-    document.getElementById('video-url-container').style.display = 'block';
+
+    // Handle videoId from URL
+    handleVideoIdFromURL();
 }
+
+
