@@ -130,7 +130,7 @@ function normalizeYouTubeUrl(url) {
 
 // Handle login
 function login(email, password) {
-    fetch("http://127.0.0.1:8000/api/login", {
+    fetch("http://165.232.43.182/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -160,7 +160,7 @@ function login(email, password) {
 
 // Load tags from the backend
 function loadTags(authToken) {
-    fetch("http://127.0.0.1:8000/api/tags", {
+    fetch("http://165.232.43.182/api/tags", {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${authToken}`,
@@ -199,7 +199,7 @@ function fetchReflectionsForVideo(videoUrl) {
     console.log(`Fetching reflections for video URL: ${videoUrl}`);
 
     // Use the full video URL as the parameter
-    fetch(`http://127.0.0.1:8000/api/resources?video_url=${encodeURIComponent(videoUrl)}`, {
+    fetch(`http://165.232.43.182/api/resources?video_url=${encodeURIComponent(videoUrl)}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`,
@@ -410,7 +410,7 @@ function sendReflections() {
 
     console.log("Sending reflections with payload:", payload);
 
-    fetch("http://127.0.0.1:8000/api/resources", {
+    fetch("http://165.232.43.182/api/resources", {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`,
